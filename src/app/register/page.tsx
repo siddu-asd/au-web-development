@@ -43,7 +43,7 @@ export default function RegisterPage() {
         router.refresh();
         return;
       }
-      setNotice("Your account was created, but Supabase is still requiring email confirmation. To enter immediately using your password, turn off Confirm email in Supabase Authentication settings, save the change, then sign in with your password.");
+      setNotice("Supabase did not return a sign-in session, so it is still requiring email confirmation. To skip email verification and go straight to the student portal after signup, turn off Confirm email in Supabase Authentication settings and save the change. Then create the account again. Existing unconfirmed accounts must be confirmed in Supabase Auth before they can sign in.");
     } catch(reason) {
       setError(reason instanceof Error?reason.message:"Registration failed. Please try again.");
     } finally {setBusy(false);}

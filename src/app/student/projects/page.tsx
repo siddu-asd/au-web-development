@@ -1,8 +1,9 @@
 "use client";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Folder, FolderOpen, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
 
@@ -15,45 +16,191 @@ type Project = {
   technologies: string[];
   subject_name?: string;
   subject_id?: string;
-  subject?: { subject_name: string } | { subject_name: string }[] | null;
-  available?: string;
 };
 
-const demoProjects:Project[]=[
- {id:"101",project_code:"PRJ-WD-101",title:"Campus Event Hub",description:"An event discovery and registration platform.",difficulty:"Medium",technologies:["React","Supabase"],available:"18"},
- {id:"102",project_code:"PRJ-WD-102",title:"Smart Expense Tracker",description:"Track spending and visualize monthly budgets.",difficulty:"Easy",technologies:["JavaScript","Charts"],available:"12"},
- {id:"103",project_code:"PRJ-WD-103",title:"University Library Portal",description:"Search catalogues and manage book reservations.",difficulty:"Hard",technologies:["Next.js","PostgreSQL"],available:"22"},
- {id:"104",project_code:"PRJ-WD-104",title:"Campus Connect Portal",description:"A student community for announcements and projects.",difficulty:"Medium",technologies:["React","Firebase"],available:"16"},
+type SubjectFolder = {
+  id: string;
+  subject_code: string;
+  subject_name: string;
+  description: string | null;
+  projectCount: number;
+};
+
+const demoProjects: Project[] = [
+  { id: "101", project_code: "PRJ-WD-101", title: "Campus Event Hub", description: "An event discovery and registration platform.", difficulty: "Medium", technologies: ["React", "Supabase"] },
+  { id: "102", project_code: "PRJ-WD-102", title: "Smart Expense Tracker", description: "Track spending and visualize monthly budgets.", difficulty: "Easy", technologies: ["JavaScript", "Charts"] },
+  { id: "103", project_code: "PRJ-WD-103", title: "University Library Portal", description: "Search catalogues and manage book reservations.", difficulty: "Hard", technologies: ["Next.js", "PostgreSQL"] },
+  { id: "104", project_code: "PRJ-WD-104", title: "Campus Connect Portal", description: "A student community for announcements and projects.", difficulty: "Medium", technologies: ["React", "Firebase"] },
 ];
 
-export default function StudentProjects(){
- const [projects,setProjects]=useState<Project[]>(demoProjects);
- const [search,setSearch]=useState("");
- const [difficulty,setDifficulty]=useState("All difficulties");
- const [subjectFilter,setSubjectFilter]=useState("");
- const [loading,setLoading]=useState(isSupabaseConfigured);
- const [error,setError]=useState("");
- useEffect(()=>{
-  if(!isSupabaseConfigured)return;
-  let active=true;
-  createClient().rpc("get_available_projects").then(({data,error})=>{
-   if(!active)return;
-   setSubjectFilter(new URLSearchParams(window.location.search).get("subject")??"");
-   if(error){setError(error.message);setLoading(false);return;}
-   setProjects((data??[]) as unknown as Project[]);setLoading(false);
-  });
-  return ()=>{active=false;};
- },[]);
- const visible=useMemo(()=>projects.filter(p=>
-  (difficulty==="All difficulties"||p.difficulty===difficulty)&&
-  (!subjectFilter||p.subject_id===subjectFilter)&&
-  `${p.title} ${p.project_code} ${p.description??""}`.toLowerCase().includes(search.toLowerCase())
- ),[projects,search,difficulty,subjectFilter]);
- return <DashboardShell role="student" title="Available Projects" description="Browse published projects available for allocation.">
-  {!isSupabaseConfigured&&<p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Sample projects for preview only; these are not database records.</p>}
-  <div className="mb-5 flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="absolute left-3 top-3 text-slate-400" size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search projects" className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-xs"/></div><select aria-label="Filter by difficulty" value={difficulty} onChange={e=>setDifficulty(e.target.value)} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs"><option>All difficulties</option><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
-  {error&&<p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-xs text-red-700">Could not load projects: {error}</p>}
-  {loading?<div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Loading published projects…</div>:visible.length===0?<div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center"><h2 className="text-sm font-bold">No projects found</h2><p className="mt-2 text-xs text-slate-500">Try another search or check back later.</p></div>:
-  <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{visible.map(p=>{const subject=p.subject_name??(Array.isArray(p.subject)?p.subject[0]?.subject_name:p.subject?.subject_name);return <article key={p.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><span className="text-[10px] font-bold text-slate-400">{p.project_code}</span><span className={`rounded-full px-2 py-1 text-[10px] font-bold ${p.difficulty==="Easy"?"bg-green-50 text-green-600":p.difficulty==="Hard"?"bg-red-50 text-red-600":"bg-orange-50 text-orange-600"}`}>{p.difficulty}</span></div><h2 className="mt-4 text-base font-bold">{p.title}</h2><p className="mt-1 text-[10px] font-semibold text-blue-600">{subject??"Project"}</p><p className="mt-2 min-h-10 text-xs leading-5 text-slate-500">{p.description}</p><div className="mt-4 flex flex-wrap gap-1.5">{(p.technologies??[]).map(t=><span key={t} className="rounded-md bg-slate-100 px-2 py-1 text-[9px] font-bold text-slate-600">{t}</span>)}</div><div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4"><span className="text-[10px] text-slate-400">{p.available??"Available"} spots available</span><Link href={`/student/projects/${p.id}`} className="flex items-center gap-1 text-xs font-bold text-blue-600">View details <ArrowRight size={13}/></Link></div></article>})}</div>}
- </DashboardShell>;
+export default function StudentProjects() {
+  const [projects, setProjects] = useState<Project[]>(demoProjects);
+  const [subjects, setSubjects] = useState<SubjectFolder[]>([]);
+  const [subjectFilter, setSubjectFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [difficulty, setDifficulty] = useState("All difficulties");
+  const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    let active = true;
+
+    async function load() {
+      try {
+        const supabase = createClient();
+        const [projectResult, subjectResult] = await Promise.all([
+          supabase.rpc("get_available_projects"),
+          supabase.from("subjects").select("id,subject_code,subject_name,description").eq("status", "PUBLISHED").order("subject_name"),
+        ]);
+        if (projectResult.error) throw projectResult.error;
+        if (subjectResult.error) throw subjectResult.error;
+        if (!active) return;
+
+        const availableProjects = (projectResult.data ?? []) as unknown as Project[];
+        const publishedSubjects = subjectResult.data ?? [];
+        setProjects(availableProjects);
+        setSubjects(publishedSubjects.map((subject) => ({
+          id: subject.id,
+          subject_code: subject.subject_code,
+          subject_name: subject.subject_name,
+          description: subject.description,
+          projectCount: availableProjects.filter((project) => project.subject_id === subject.id).length,
+        })));
+        setSubjectFilter(new URLSearchParams(window.location.search).get("subject") ?? "");
+      } catch (reason) {
+        if (active) setError(reason instanceof Error ? reason.message : "Unable to load subjects and projects.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => { active = false; };
+  }, []);
+
+  const selectedSubject = subjects.find((subject) => subject.id === subjectFilter);
+  const visibleProjects = useMemo(() => projects.filter((project) =>
+    project.subject_id === subjectFilter &&
+    (difficulty === "All difficulties" || project.difficulty === difficulty) &&
+    `${project.title} ${project.project_code} ${project.description ?? ""}`.toLowerCase().includes(search.toLowerCase()),
+  ), [projects, search, difficulty, subjectFilter]);
+
+  function openSubject(id: string) {
+    setSubjectFilter(id);
+    window.history.replaceState(null, "", `/student/projects?subject=${encodeURIComponent(id)}`);
+  }
+
+  function closeSubject() {
+    setSubjectFilter("");
+    setSearch("");
+    setDifficulty("All difficulties");
+    window.history.replaceState(null, "", "/student/projects");
+  }
+
+  return (
+    <DashboardShell role="student" title="Projects by Subject" description="Open a subject folder to browse its available projects.">
+      {!isSupabaseConfigured && <p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Sample projects for preview only; these are not database records.</p>}
+
+      {subjectFilter && (
+        <div className="mb-5">
+          <button type="button" onClick={closeSubject} className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-800">
+            <ArrowLeft size={15}/> All subject folders
+          </button>
+        </div>
+      )}
+
+      {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-xs text-red-700">Could not load projects: {error}</p>}
+
+      {loading ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Loading subject folders…</div>
+      ) : isSupabaseConfigured && !subjectFilter ? (
+        subjects.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <Folder className="mx-auto text-blue-600" size={30}/>
+            <h2 className="mt-4 text-sm font-bold">No published subject folders</h2>
+            <p className="mt-2 text-xs text-slate-500">Published subjects will appear here when they are available.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {subjects.map((subject) => (
+              <button
+                type="button"
+                key={subject.id}
+                onClick={() => openSubject(subject.id)}
+                className="group rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-100">
+                    <Folder size={24}/>
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">
+                    {subject.projectCount} available
+                  </span>
+                </div>
+                <h2 className="mt-5 text-sm font-bold text-slate-900">{subject.subject_name}</h2>
+                <p className="mt-1 text-[10px] font-semibold text-blue-600">{subject.subject_code}</p>
+                <p className="mt-3 min-h-10 text-xs leading-5 text-slate-500">{subject.description || "Browse projects belonging to this subject."}</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-blue-600">
+                  Open subject folder <ArrowRight size={13}/>
+                </span>
+              </button>
+            ))}
+          </div>
+        )
+      ) : (
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <header className="flex flex-col justify-between gap-4 border-b border-slate-100 bg-slate-50/70 p-5 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700"><FolderOpen size={25}/></span>
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-wide text-blue-600">Subject folder</div>
+                <h2 className="mt-1 text-base font-bold text-slate-900">{selectedSubject?.subject_name ?? "Available projects"}</h2>
+                {selectedSubject && <p className="mt-1 text-[10px] text-slate-500">{selectedSubject.subject_code}</p>}
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="relative sm:w-64">
+                <Search className="absolute left-3 top-3 text-slate-400" size={16}/>
+                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search in this folder" className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-xs"/>
+              </div>
+              <select aria-label="Filter by difficulty" value={difficulty} onChange={(event) => setDifficulty(event.target.value)} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs">
+                <option>All difficulties</option><option>Easy</option><option>Medium</option><option>Hard</option>
+              </select>
+            </div>
+          </header>
+
+          {visibleProjects.length === 0 ? (
+            <div className="p-10 text-center">
+              <FolderOpen className="mx-auto text-slate-300" size={30}/>
+              <h3 className="mt-4 text-sm font-bold text-slate-800">{projects.some((project) => project.subject_id === subjectFilter) ? "No projects match your filters" : "This subject folder is empty"}</h3>
+              <p className="mt-2 text-xs text-slate-500">{projects.some((project) => project.subject_id === subjectFilter) ? "Try changing the search or difficulty." : "There are no available projects for this subject right now."}</p>
+            </div>
+          ) : (
+            <div className="p-5">
+              <div className="mb-4 text-xs font-semibold text-slate-500">{visibleProjects.length} project{visibleProjects.length === 1 ? "" : "s"} in this subject</div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {visibleProjects.map((project) => (
+                  <article key={project.id} className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 transition hover:border-blue-200 hover:shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-400">{project.project_code}</span>
+                      <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${project.difficulty === "Easy" ? "bg-green-50 text-green-600" : project.difficulty === "Hard" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"}`}>{project.difficulty}</span>
+                    </div>
+                    <h3 className="mt-4 text-sm font-bold text-slate-900">{project.title}</h3>
+                    <p className="mt-2 min-h-10 flex-1 text-xs leading-5 text-slate-500">{project.description}</p>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {(project.technologies ?? []).map((technology) => <span key={technology} className="rounded-md bg-slate-100 px-2 py-1 text-[9px] font-bold text-slate-600">{technology}</span>)}
+                    </div>
+                    <div className="mt-5 flex items-center justify-end border-t border-slate-100 pt-4">
+                      <Link href={`/student/projects/${project.id}`} className="flex items-center gap-1 text-xs font-bold text-blue-600">View details <ArrowRight size={13}/></Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+    </DashboardShell>
+  );
 }

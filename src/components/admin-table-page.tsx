@@ -12,6 +12,7 @@ export function AdminTablePage({
   rows,
   role = "admin",
   dataSource,
+  children,
 }: {
   title: string;
   description: string;
@@ -19,6 +20,7 @@ export function AdminTablePage({
   rows: (string | React.ReactNode)[][];
   role?: "admin" | "faculty";
   dataSource?: "allocations" | "students" | "progress" | "projects" | "subjects";
+  children?: React.ReactNode;
 }) {
   const [visibleRows,setVisibleRows]=useState(rows);
   const [search,setSearch]=useState("");
@@ -125,6 +127,7 @@ export function AdminTablePage({
   const filteredRows=visibleRows.filter(row=>row.map(cell=>typeof cell==="string"?cell:"").join(" ").toLowerCase().includes(search.toLowerCase()));
   return (
     <DashboardShell role={role} title={title} description={description}>
+      {children&&<div className="mb-5">{children}</div>}
       {!isSupabaseConfigured&&dataSource&&<p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Demo records; live data requires Supabase.</p>}
       {error&&<p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-xs text-red-700">{error}</p>}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row">

@@ -1,2 +1,3 @@
 import { AdminTablePage } from "@/components/admin-table-page";
-export default function FacultyDashboard(){return <AdminTablePage role="faculty" dataSource="allocations" title="Faculty Dashboard" description="Monitor projects and submissions for your assigned subjects." columns={["Student","Project","Subject","Allocated","Deadline","Status"]} rows={[["Rahul Kumar","Campus Connect","Web Development","Nov 24","Dec 04","Active"],["Sneha Patel","Expense Tracker","Web Development","Nov 23","Dec 03","Due soon"]]}/>}
+import { SubjectProjectFolders } from "@/components/subject-project-folders";
+export default function FacultyDashboard(){return <AdminTablePage role="faculty" dataSource="allocations" title="Faculty Dashboard" description="Monitor projects and submissions for your assigned subjects." columns={["Student","Project","Subject","Allocated","Deadline","Status"]} rows={[]}><SubjectProjectFolders role="faculty" compact/></AdminTablePage>}
