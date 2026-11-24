@@ -1,0 +1,23 @@
+"use client";
+import { useEffect, useState } from "react";
+import { DashboardShell } from "@/components/dashboard-shell";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/demo";
+import { ExternalLink } from "lucide-react";
+
+type Submission={id:string;submission_status:string;submitted_at:string;vercel_url:string;github_url:string;faculty_feedback:string|null;profiles:{full_name:string;registration_number:string}|null;project_allocations:{projects:{title:string}|null}|null};
+const demo=[{id:"d1",submission_status:"Under Review",submitted_at:"2026-11-22T16:20:00Z",vercel_url:"https://library-demo.vercel.app",github_url:"https://github.com/demo/library",faculty_feedback:null,profiles:{full_name:"Arjun Mehta",registration_number:"AU2024CSE071"},project_allocations:{projects:{title:"Library Portal"}}}];
+export default function Submissions({role="admin"}:{role?:"admin"|"faculty"}){
+ const [items,setItems]=useState<Submission[]>(demo);const [loading,setLoading]=useState(isSupabaseConfigured);const [error,setError]=useState("");const [busy,setBusy]=useState<string|null>(null);
+ useEffect(()=>{if(!isSupabaseConfigured)return;let active=true;createClient().from("project_submissions").select("id,submission_status,submitted_at,vercel_url,github_url,faculty_feedback,profiles!project_submissions_student_id_fkey(full_name,registration_number),project_allocations(projects(title))").order("submitted_at",{ascending:false}).then(({data,error})=>{if(!active)return;if(error)setError(error.message);else setItems((data??[]) as unknown as Submission[]);setLoading(false);});return()=>{active=false;};},[]);
+ async function review(item:Submission,status:"Under Review"|"Changes Requested"|"Approved"|"Rejected"){
+  const feedback=window.prompt(`Optional feedback for ${status.toLowerCase()}:`,item.faculty_feedback??"");
+  if(feedback===null)return;
+  if(!isSupabaseConfigured){setError("Demo mode: review is not saved.");return;}
+  setBusy(item.id);setError("");
+  try{const {error:rpcError}=await createClient().rpc("review_submission",{p_submission_id:item.id,p_status:status,p_feedback:feedback});if(rpcError)throw rpcError;setItems(current=>current.map(row=>row.id===item.id?{...row,submission_status:status,faculty_feedback:feedback}:row));}
+  catch(reason){setError(reason instanceof Error?reason.message:"Review update failed.");}
+  finally{setBusy(null);}
+ }
+ return <DashboardShell role={role} title={role==="admin"?"Submissions":"Submission Reviews"} description="Review deployed websites and repository submissions.">{!isSupabaseConfigured&&<p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Demo records; faculty decisions are not persisted until Supabase is configured.</p>}{error&&<p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-xs text-red-700">{error}</p>}{loading?<div className="rounded-xl border bg-white p-8 text-center text-sm text-slate-500">Loading submissions…</div>:<div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm"><table className="w-full min-w-[980px] text-left text-xs"><thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400"><tr>{["Student","Project","Submitted","Status","Links","Faculty action"].map(h=><th key={h} className="px-4 py-3">{h}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{items.map(item=><tr key={item.id}><td className="px-4 py-4"><b>{item.profiles?.full_name??"Student"}</b><div className="mt-1 text-[10px] text-slate-400">{item.profiles?.registration_number}</div></td><td className="px-4 py-4">{item.project_allocations?.projects?.title??"Project"}</td><td className="px-4 py-4">{new Date(item.submitted_at).toLocaleString()}</td><td className="px-4 py-4">{item.submission_status}</td><td className="px-4 py-4"><div className="flex flex-col gap-2"><a className="flex items-center gap-1 text-blue-600" href={item.vercel_url} target="_blank" rel="noreferrer">Website <ExternalLink size={12}/></a><a className="flex items-center gap-1 text-blue-600" href={item.github_url} target="_blank" rel="noreferrer">GitHub <ExternalLink size={12}/></a></div></td><td className="px-4 py-4"><div className="flex flex-wrap gap-1">{(["Under Review","Changes Requested","Approved","Rejected"] as const).map(status=><button key={status} disabled={busy===item.id||item.submission_status==="Approved"} onClick={()=>void review(item,status)} className="rounded border border-slate-200 px-2 py-1 text-[10px] font-semibold disabled:opacity-50">{status}</button>)}</div></td></tr>)}</tbody></table>{items.length===0&&!loading&&<p className="p-8 text-center text-xs text-slate-500">No submissions yet.</p>}</div>}</DashboardShell>;
+}

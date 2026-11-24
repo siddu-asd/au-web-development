@@ -1,0 +1,2 @@
+import { AdminTablePage } from "@/components/admin-table-page";
+export default function FacultySubjects(){return <AdminTablePage role="faculty" dataSource="subjects" title="Assigned Subjects" description="Subjects assigned to your faculty account." columns={["Subject","Code","Projects","Active students","Status"]} rows={[["Web Development","WD 301","24","318","Published"],["Database Systems","DB 302","16","214","Published"],["Software Engineering","SE 305","12","186","Published"]]}/>}

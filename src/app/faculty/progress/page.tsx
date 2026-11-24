@@ -1,0 +1,2 @@
+import { AdminTablePage } from "@/components/admin-table-page";
+export default function FacultyProgress(){return <AdminTablePage role="faculty" dataSource="progress" title="Student Progress" description="Monitor daily progress for assigned projects." columns={["Student","Project","Day","Completed","Progress","Last update"]} rows={[["Rahul Kumar","Campus Connect","6 / 10","17 / 25","68%","Today"],["Sneha Patel","Expense Tracker","5 / 10","11 / 25","44%","Yesterday"],["Arjun Mehta","Library Portal","8 / 10","21 / 25","84%","Today"]]}/>}
