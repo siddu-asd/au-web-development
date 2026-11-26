@@ -5,6 +5,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   ArrowDownRight,
   ArrowRight,
+  ArrowRightLeft,
   BookOpen,
   CalendarDays,
   Check,
@@ -261,6 +262,9 @@ export default function StudentDashboard() {
             <div className="flex flex-wrap gap-3 px-5 pb-5 sm:px-7 sm:pb-7">
               <Link href="/student/progress" className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-[11px] font-bold text-white transition hover:-translate-y-0.5 hover:bg-blue-700">Update daily progress <ArrowRight size={13}/></Link>
               <Link href="/student/submission" className="inline-flex h-10 items-center rounded-xl border border-slate-200 px-4 text-[11px] font-bold text-slate-700 transition hover:bg-slate-50">Submission workspace</Link>
+              <Link href="/student/my-project#change-project" className="inline-flex h-10 items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/70 px-4 text-[11px] font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100">
+                <ArrowRightLeft size={13}/> Release &amp; change project
+              </Link>
             </div>
           </article>
 

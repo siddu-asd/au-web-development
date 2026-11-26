@@ -237,12 +237,12 @@ export default function MyProject() {
               <p className="relative mt-4 text-[10px] leading-5 text-slate-400">Your countdown follows the saved project deadline.</p>
             </section>
 
-            <section className="rounded-[1.75rem] border border-white bg-white p-5 shadow-sm">
+            <section id="change-project" className="rounded-[1.75rem] border border-white bg-white p-5 shadow-sm">
               <div className="flex items-start gap-3">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600"><ShieldAlert size={18}/></span>
                 <div>
-                  <h2 className="text-xs font-bold text-slate-900">Selected the wrong project?</h2>
-                  <p className="mt-1 text-[11px] leading-5 text-slate-500">You can release your selection and choose another while you have not submitted your work.</p>
+                  <h2 className="text-xs font-bold text-slate-900">Need to choose a different project?</h2>
+                  <p className="mt-1 text-[11px] leading-5 text-slate-500">Release this project to make it available for another student, then select a different available project. This is available until you submit your work.</p>
                 </div>
               </div>
               {submissionCount !== null && submissionCount > 0 ? (
@@ -254,7 +254,7 @@ export default function MyProject() {
                   disabled={!canChangeProject || !isSupabaseConfigured}
                   className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-slate-200 disabled:hover:bg-white disabled:hover:text-slate-700"
                 >
-                  <X size={14}/>Change selected project
+                  <X size={14}/>Release &amp; choose another
                 </button>
               )}
             </section>
@@ -270,7 +270,7 @@ export default function MyProject() {
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-50 text-rose-600"><ShieldAlert size={22}/></span>
             <h2 id="cancel-project-title" className="mt-5 text-lg font-bold tracking-tight text-slate-950">Release this project?</h2>
             <p id="cancel-project-description" className="mt-2 text-sm leading-6 text-slate-500">
-              <strong className="text-slate-700">{allocation.projects?.title ?? "Your selected project"}</strong> will become available to other students. Your selection will be marked as cancelled, and you can immediately choose a different available project.
+              <strong className="text-slate-700">{allocation.projects?.title ?? "Your selected project"}</strong> will be released and become available for another student to select. You can then immediately choose a different available project.
             </p>
             <p className="mt-3 rounded-xl bg-amber-50 p-3 text-[11px] leading-5 text-amber-800">You can’t undo this release. Your checklist history will be kept, but the allocation cannot be restored.</p>
             {error && <p role="alert" className="mt-3 text-xs text-red-600">{error}</p>}
