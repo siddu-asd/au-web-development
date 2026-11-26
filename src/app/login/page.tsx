@@ -7,6 +7,8 @@ import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
 import { useRouter, useSearchParams } from "next/navigation";
+import { startPageTransition } from "@/components/page-transition-loader";
+import { AuthThreeScene } from "@/components/auth-three-scene";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -26,7 +28,9 @@ function LoginForm() {
     setBusy(true);
     try {
       if (!isSupabaseConfigured) {
-        router.push(role === "admin" ? "/admin/dashboard" : "/student/dashboard");
+        const destination = role === "admin" ? "/admin/dashboard" : "/student/dashboard";
+        startPageTransition(destination);
+        router.push(destination);
         return;
       }
 
@@ -37,7 +41,9 @@ function LoginForm() {
           options: { shouldCreateUser: false },
         });
         if (authError) throw authError;
-        router.push(`/verify-otp?email=${encodeURIComponent(email)}&type=email&audience=student`);
+        const destination = `/verify-otp?email=${encodeURIComponent(email)}&type=email&audience=student`;
+        startPageTransition(destination);
+        router.push(destination);
         return;
       }
 
@@ -56,7 +62,9 @@ function LoginForm() {
         await supabase.auth.signOut();
         throw new Error("This sign-in page is for students. Use the faculty sign-in page for faculty accounts.");
       }
-      router.replace(profile.role === "SUPER_ADMIN" ? "/admin/dashboard" : profile.role === "FACULTY" ? "/faculty/dashboard" : "/student/dashboard");
+      const destination = profile.role === "SUPER_ADMIN" ? "/admin/dashboard" : profile.role === "FACULTY" ? "/faculty/dashboard" : "/student/dashboard";
+      startPageTransition(destination);
+      router.replace(destination);
       router.refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Sign-in failed. Please try again.");
@@ -67,15 +75,16 @@ function LoginForm() {
 
   return (
     <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[1fr_480px]">
-      <section className="dashboard-enter relative hidden overflow-hidden bg-slate-950 p-12 lg:flex lg:flex-col">
-        <div className="absolute -right-32 top-20 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl" />
-        <div><Logo tone="inverse"/></div>
-        <div className="relative my-auto max-w-xl">
-          <div className="mb-6 text-xs font-bold uppercase tracking-[0.18em] text-blue-400">ProjectHub workspace</div>
+      <section className="auth-visual-panel dashboard-enter relative hidden overflow-hidden bg-slate-950 p-12 lg:flex lg:flex-col">
+        <AuthThreeScene />
+        <div aria-hidden="true" className="auth-visual-orbit"/>
+        <div className="relative"><Logo tone="inverse"/></div>
+        <div className="relative z-10 my-auto max-w-xl">
+          <div className="auth-panel-kicker mb-6 text-xs font-bold uppercase tracking-[0.18em] text-blue-400"><span/> ProjectHub workspace</div>
           <h1 className="text-5xl font-bold leading-[1.1] text-white">Build with purpose.<br/><span className="text-blue-400">Track every step.</span></h1>
           <p className="mt-6 max-w-md text-lg leading-8 text-slate-400">One workspace for project allocation, daily development progress and final submission reviews.</p>
         </div>
-        <div className="text-xs text-slate-500">© 2026 Arunodaya University</div>
+        <div className="relative z-10 flex items-center justify-between gap-4"><p className="text-xs text-slate-500">© 2026 Arunodaya University</p><span className="auth-side-note"><span className="auth-live-dot"/> YOUR WORKSPACE IS READY</span></div>
       </section>
       <section className="dashboard-enter flex items-center justify-center px-6 py-12 [animation-delay:80ms]">
         <div className="w-full max-w-[390px]">
@@ -108,7 +117,7 @@ function LoginForm() {
             </div>}
             {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-700">{error}</p>}
             {signupCompleted && <p role="status" className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs leading-5 text-blue-800">Account created. Sign in with the email and password you just registered. If Supabase says the email is not confirmed, turn off <strong>Confirm email</strong> in Supabase Authentication settings; the app cannot bypass that setting.</p>}
-            <button disabled={busy} type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 disabled:opacity-60">
+            <button aria-busy={busy} disabled={busy} type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 disabled:opacity-60">
               {busy ? "Please wait…" : method==="otp"?"Send verification code":"Sign in"} <ArrowRight size={16}/>
             </button>
           </form>

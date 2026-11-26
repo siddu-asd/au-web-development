@@ -24,6 +24,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "./logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
+import { startPageTransition } from "@/components/page-transition-loader";
 
 type Role = "admin" | "faculty" | "student";
 
@@ -134,7 +135,9 @@ export function DashboardShell({
         const {error}=await createClient().auth.signOut();
         if(error)throw error;
       }
-      router.replace(role==="faculty"?"/faculty/login":"/login");
+      const destination = role==="faculty"?"/faculty/login":"/login";
+      startPageTransition(destination);
+      router.replace(destination);
       router.refresh();
     } catch(reason) {
       setShellError(reason instanceof Error?reason.message:"Unable to sign out. Please try again.");
@@ -206,7 +209,7 @@ export function DashboardShell({
             {role==="student"?<CircleUserRound size={17}/>:role==="faculty"?<LayoutDashboard size={17}/>:<Settings size={17}/>}
             {role==="student"?"My profile":role==="faculty"?"Faculty dashboard":"Settings"}
           </Link>
-          <button onClick={()=>void logout()} disabled={signingOut} className="mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-3 text-[12px] font-semibold text-rose-300 transition-colors hover:bg-rose-400/10 disabled:cursor-wait disabled:opacity-60">
+          <button aria-busy={signingOut} onClick={()=>void logout()} disabled={signingOut} className="mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-3 text-[12px] font-semibold text-rose-300 transition-colors hover:bg-rose-400/10 disabled:cursor-wait disabled:opacity-60">
             <LogOut size={17} /> {signingOut?"Signing out…":"Logout"}
           </button>
         </div>

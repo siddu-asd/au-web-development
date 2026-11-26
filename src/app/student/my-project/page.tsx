@@ -16,6 +16,7 @@ import {
 import { DashboardShell } from "@/components/dashboard-shell";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
+import { startPageTransition } from "@/components/page-transition-loader";
 
 type Allocation = {
   id: string;
@@ -130,6 +131,7 @@ export default function MyProject() {
       });
       if (cancelError) throw cancelError;
       setConfirmCancel(false);
+      startPageTransition("/student/projects?allocation=cancelled");
       router.replace("/student/projects?allocation=cancelled");
       router.refresh();
     } catch (reason) {
@@ -276,7 +278,7 @@ export default function MyProject() {
             {error && <p role="alert" className="mt-3 text-xs text-red-600">{error}</p>}
             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row">
               <button type="button" autoFocus onClick={() => setConfirmCancel(false)} disabled={cancelling} className="h-11 flex-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50">Keep this project</button>
-              <button type="button" onClick={() => void releaseAllocation()} disabled={cancelling} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-rose-600 text-xs font-bold text-white transition hover:bg-rose-700 disabled:cursor-wait disabled:opacity-60">
+              <button type="button" aria-busy={cancelling} onClick={() => void releaseAllocation()} disabled={cancelling} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-rose-600 text-xs font-bold text-white transition hover:bg-rose-700 disabled:cursor-wait disabled:opacity-60">
                 {cancelling ? "Releasing project…" : "Release and browse"} <ArrowRight size={14}/>
               </button>
             </div>

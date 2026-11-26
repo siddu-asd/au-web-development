@@ -29,20 +29,34 @@ export function AdminTablePage({
   const [page,setPage]=useState(0);
   const [studentIds,setStudentIds]=useState<Map<string,string>>(new Map());
   const [accountBusyId,setAccountBusyId]=useState("");
-  const extendDeadline=useCallback(async(allocationId:string,currentDeadline:string)=>{
-    const deadlineText=window.prompt("New deadline (for example 2026-12-05T10:00:00+05:30):",currentDeadline);
-    if(deadlineText===null)return;
-    const deadline=new Date(deadlineText);
+  const [deadlineEdit,setDeadlineEdit]=useState<{allocationId:string}|null>(null);
+  const [deadlineInput,setDeadlineInput]=useState("");
+  const [deadlineReason,setDeadlineReason]=useState("");
+  const [savingDeadline,setSavingDeadline]=useState(false);
+  const extendDeadline=useCallback((allocationId:string,currentDeadline:string)=>{
+    const deadline=new Date(currentDeadline);
+    const localDeadline=new Date(deadline.getTime()-deadline.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    setDeadlineEdit({allocationId});
+    setDeadlineInput(localDeadline);
+    setDeadlineReason("");
+    setError("");
+  },[]);
+  async function saveDeadlineExtension(){
+    if(!deadlineEdit)return;
+    const deadline=new Date(deadlineInput);
     if(Number.isNaN(deadline.getTime())){setError("Enter a valid deadline date and time.");return;}
-    const reason=window.prompt("Reason for deadline extension:");
-    if(reason===null)return;
+    if(!deadlineReason.trim()){setError("Enter a reason for extending this deadline.");return;}
+    setSavingDeadline(true);
     setError("");
     try{
-      const {error:rpcError}=await createClient().rpc("extend_project_deadline",{p_allocation_id:allocationId,p_new_deadline:deadline.toISOString(),p_reason:reason});
+      const {error:rpcError}=await createClient().rpc("extend_project_deadline",{p_allocation_id:deadlineEdit.allocationId,p_new_deadline:deadline.toISOString(),p_reason:deadlineReason.trim()});
       if(rpcError)throw rpcError;
       window.location.reload();
-    }catch(cause){setError(cause instanceof Error?cause.message:"Deadline extension failed.");}
-  },[]);
+    }catch(cause){
+      setError(cause instanceof Error?cause.message:"Deadline extension failed.");
+      setSavingDeadline(false);
+    }
+  }
   useEffect(()=>{
     if(!dataSource||!isSupabaseConfigured)return;
     let active=true;
@@ -175,13 +189,14 @@ export function AdminTablePage({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-xs">
           <thead className="bg-slate-50/80 text-[9px] uppercase tracking-[.13em] text-slate-400"><tr>{[...columns,...extraColumns].map(c=><th key={c} className="px-5 py-3.5 font-bold">{c}</th>)}</tr></thead>
-          <tbody className="divide-y divide-slate-100/80">{pageRows.map((row,i)=><tr key={String(row[1]??i)} className="transition-colors hover:bg-blue-50/25">{row.map((cell,j)=><td key={j} className="px-5 py-4">{cell}</td>)}{dataSource==="students"&&<td className="px-5 py-4">{isSupabaseConfigured&&typeof row[1]==="string"&&typeof row[5]==="string"?<button type="button" disabled={accountBusyId===studentIds.get(row[1])} onClick={()=>void toggleStudentAccount(row[1] as string,row[5] as string)} className={`inline-flex h-8 items-center rounded-lg border px-2.5 text-[10px] font-bold transition disabled:opacity-50 ${row[5]==="ACTIVE"?"border-rose-200 text-rose-700 hover:bg-rose-50":"border-emerald-200 text-emerald-700 hover:bg-emerald-50"}`}>{accountBusyId===studentIds.get(row[1])?"Saving…":row[5]==="ACTIVE"?"Deactivate":"Reactivate"}</button>:<span className="text-[10px] text-slate-400">—</span>}</td>}</tr>)}</tbody>
+          <tbody className="divide-y divide-slate-100/80">{pageRows.map((row,i)=><tr key={String(row[1]??i)} className="transition-colors hover:bg-blue-50/25">{row.map((cell,j)=><td key={j} className="px-5 py-4">{cell}</td>)}{dataSource==="students"&&<td className="px-5 py-4">{isSupabaseConfigured&&typeof row[1]==="string"&&typeof row[5]==="string"?<button type="button" aria-busy={accountBusyId===studentIds.get(row[1])} disabled={accountBusyId===studentIds.get(row[1])} onClick={()=>void toggleStudentAccount(row[1] as string,row[5] as string)} className={`inline-flex h-8 items-center rounded-lg border px-2.5 text-[10px] font-bold transition disabled:opacity-50 ${row[5]==="ACTIVE"?"border-rose-200 text-rose-700 hover:bg-rose-50":"border-emerald-200 text-emerald-700 hover:bg-emerald-50"}`}>{accountBusyId===studentIds.get(row[1])?"Saving…":row[5]==="ACTIVE"?"Deactivate":"Reactivate"}</button>:<span className="text-[10px] text-slate-400">—</span>}</td>}</tr>)}</tbody>
         </table>
       </div>
         {loading&&<div className="space-y-3 p-5"><div className="h-10 animate-pulse rounded-lg bg-slate-100"/><div className="h-10 animate-pulse rounded-lg bg-slate-100"/><div className="h-10 animate-pulse rounded-lg bg-slate-100"/></div>}
         {!loading&&filteredRows.length===0&&!error&&<p className="p-10 text-center text-xs text-slate-500">No records found.</p>}
         {!loading&&filteredRows.length>pageSize&&<div className="flex items-center justify-between border-t border-slate-100 px-5 py-3"><span className="text-[10px] text-slate-400">Showing {page*pageSize+1}–{Math.min((page+1)*pageSize,filteredRows.length)} of {filteredRows.length}</span><div className="flex gap-2"><button type="button" onClick={()=>setPage((current)=>Math.max(0,current-1))} disabled={page===0} className="h-8 rounded-lg border border-slate-200 px-3 text-[10px] font-bold text-slate-600 disabled:opacity-40">Previous</button><button type="button" onClick={()=>setPage((current)=>Math.min(pageCount-1,current+1))} disabled={page>=pageCount-1} className="h-8 rounded-lg border border-slate-200 px-3 text-[10px] font-bold text-slate-600 disabled:opacity-40">Next</button></div></div>}
       </div>
+      {deadlineEdit&&<div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/50 p-4 backdrop-blur-sm"><form role="dialog" aria-modal="true" aria-labelledby="deadline-dialog-title" onSubmit={event=>{event.preventDefault();void saveDeadlineExtension();}} className="w-full max-w-md rounded-2xl border border-white bg-white p-6 shadow-2xl"><h2 id="deadline-dialog-title" className="text-base font-bold text-slate-950">Extend project deadline</h2><label className="mt-4 block text-xs font-semibold text-slate-700">New deadline<input required type="datetime-local" value={deadlineInput} onChange={event=>setDeadlineInput(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm"/></label><label className="mt-4 block text-xs font-semibold text-slate-700">Reason<textarea required value={deadlineReason} onChange={event=>setDeadlineReason(event.target.value)} rows={3} className="mt-2 w-full rounded-lg border border-slate-200 p-3 text-sm"/></label>{error&&<p role="alert" className="mt-3 text-xs text-red-600">{error}</p>}<div className="mt-5 flex justify-end gap-2"><button type="button" disabled={savingDeadline} onClick={()=>setDeadlineEdit(null)} className="h-10 rounded-lg border border-slate-200 px-4 text-xs font-semibold disabled:opacity-50">Cancel</button><button type="submit" aria-busy={savingDeadline} disabled={savingDeadline} className="h-10 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white disabled:opacity-50">{savingDeadline?"Saving…":"Save extension"}</button></div></form></div>}
     </DashboardShell>
   );
 }

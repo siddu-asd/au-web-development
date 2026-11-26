@@ -26,6 +26,8 @@ type SubjectFolder = {
   projectCount: number;
 };
 
+type ActiveAllocation = { id: string; status: string };
+
 const demoProjects: Project[] = [
   { id: "101", project_code: "PRJ-WD-101", title: "Campus Event Hub", description: "An event discovery and registration platform.", difficulty: "Medium", technologies: ["React", "Supabase"] },
   { id: "102", project_code: "PRJ-WD-102", title: "Smart Expense Tracker", description: "Track spending and visualize monthly budgets.", difficulty: "Easy", technologies: ["JavaScript", "Charts"] },
@@ -42,6 +44,7 @@ export default function StudentProjects() {
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [error, setError] = useState("");
   const [allocationReleased, setAllocationReleased] = useState(false);
+  const [activeAllocation, setActiveAllocation] = useState<ActiveAllocation | null>(null);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -50,12 +53,16 @@ export default function StudentProjects() {
     async function load() {
       try {
         const supabase = createClient();
-        const [projectResult, subjectResult] = await Promise.all([
+        const [projectResult, subjectResult, allocationResult] = await Promise.all([
           supabase.rpc("get_available_projects"),
           supabase.from("subjects").select("id,subject_code,subject_name,description").eq("status", "PUBLISHED").order("subject_name"),
+          supabase.from("project_allocations").select("id,status")
+            .in("status", ["ACTIVE", "DUE_SOON", "OVERDUE", "CHANGES_REQUESTED", "SUBMITTED", "UNDER_REVIEW"])
+            .order("allocation_date", { ascending: false }).limit(1).maybeSingle(),
         ]);
         if (projectResult.error) throw projectResult.error;
         if (subjectResult.error) throw subjectResult.error;
+        if (allocationResult.error) throw allocationResult.error;
         if (!active) return;
 
         const availableProjects = (projectResult.data ?? []) as unknown as Project[];
@@ -68,6 +75,7 @@ export default function StudentProjects() {
           description: subject.description,
           projectCount: availableProjects.filter((project) => project.subject_id === subject.id).length,
         })));
+        setActiveAllocation(allocationResult.data);
         setSubjectFilter(new URLSearchParams(window.location.search).get("subject") ?? "");
         setAllocationReleased(new URLSearchParams(window.location.search).get("allocation") === "cancelled");
       } catch (reason) {
@@ -106,6 +114,7 @@ export default function StudentProjects() {
     <DashboardShell role="student" title="Projects by Subject" description="Open a subject folder to browse its available projects.">
       {!isSupabaseConfigured && <p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Sample projects for preview only; these are not database records.</p>}
       {allocationReleased && <p role="status" className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800"><span className="grid h-6 w-6 place-items-center rounded-full bg-emerald-100"><CheckCircle2 size={15}/></span>Your previous project was released and is available for another student. Choose a new project below.</p>}
+      {activeAllocation && <div role="status" className="mb-5 flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-5 text-blue-900">{["SUBMITTED", "UNDER_REVIEW"].includes(activeAllocation.status)?"You have a submitted project. You can browse available projects, but contact faculty if you need to change your selection.":"You already have an active project. You can browse available projects, but must release your current selection before choosing another."}</p><Link href="/student/my-project#change-project" className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl bg-blue-700 px-3 text-[11px] font-bold text-white transition hover:bg-blue-800">View current project <ArrowRight size={13} className="ml-1"/></Link></div>}
 
       {subjectFilter && (
         <div className="mb-5">
@@ -178,8 +187,8 @@ export default function StudentProjects() {
           {visibleProjects.length === 0 ? (
             <div className="p-10 text-center">
               <FolderOpen className="mx-auto text-slate-300" size={30}/>
-              <h3 className="mt-4 text-sm font-bold text-slate-800">{projects.some((project) => project.subject_id === subjectFilter) ? "No projects match your filters" : "This subject folder is empty"}</h3>
-              <p className="mt-2 text-xs text-slate-500">{projects.some((project) => project.subject_id === subjectFilter) ? "Try changing the search or difficulty." : "There are no available projects for this subject right now."}</p>
+              <h3 className="mt-4 text-sm font-bold text-slate-800">{projects.some((project) => project.subject_id === subjectFilter) ? "No projects match your filters" : "No available projects in this subject"}</h3>
+              <p className="mt-2 text-xs text-slate-500">{projects.some((project) => project.subject_id === subjectFilter) ? "Try changing the search or difficulty." : "Projects may already be allocated or not yet published. Check back later or browse another subject."}</p>
             </div>
           ) : (
             <div className="p-5 sm:p-6">

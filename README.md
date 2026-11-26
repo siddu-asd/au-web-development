@@ -13,6 +13,7 @@ A full-stack academic project allocation and progress management platform built 
 - Bulk project creation from a downloadable CSV template
 - Notifications, audit logs and analytics
 - Responsive desktop, tablet and mobile interfaces
+- Animated landing experience with a pointer-reactive, canvas-projected 3D orbit; motion pauses when off-screen or in background tabs and respects reduced-motion preferences
 
 ## Local development
 
@@ -38,8 +39,10 @@ The application includes professional demo screens when Supabase environment var
    - `supabase/migrations/20261127010000_allow_students_to_cancel_project_allocations.sql`
    - `supabase/migrations/20261127020000_add_admin_faculty_management_workflow.sql`
    - `supabase/migrations/20261127030000_persist_project_duration_settings.sql`
+   - `supabase/migrations/20261127040000_allow_project_browsing_with_active_allocation.sql`
+   - `supabase/migrations/20261127050000_repair_portal_settings.sql`
 
-   For an existing Supabase project, apply only migrations that have not already run. In particular, if the five `20261124...` migrations are already applied, apply the three `20261127...` migrations in order; do not rerun previously applied SQL editor migrations.
+   For an existing Supabase project, apply only migrations that have not already run. In particular, if the five `20261124...` migrations are already applied, apply the `20261127...` migrations in order; do not rerun previously applied SQL editor migrations.
 3. Set `.env.example` values in `.env.local` and in Vercel.
 4. Configure Site URL and redirect URLs in Supabase Authentication.
 5. Enable email/password and email OTP providers.
@@ -70,6 +73,7 @@ npm start
 - Partial unique indexes enforce one active project per project and one active project per student.
 - `allocate_project` is atomic and snapshots requirement/checklist data.
 - `cancel_project_allocation` lets a student release their own unsubmitted allocation; the allocation and checklist history are retained, and the project becomes available again.
+- Students can browse available projects while they have an active allocation; the allocation RPC still prevents a second selection until the current project is released.
 - `admin_update_faculty` validates faculty changes and replaces subject assignments transactionally.
 - Portal project duration is stored in `portal_settings` and is used when new project deadlines are created; changing it does not alter existing allocations.
 - Progress is derived from completed checklist records.

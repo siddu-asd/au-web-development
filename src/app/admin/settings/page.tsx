@@ -6,6 +6,22 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
 
+function getSettingsError(reason: unknown, action: "load" | "save") {
+  const details = reason && typeof reason === "object"
+    ? reason as { code?: unknown; message?: unknown }
+    : undefined;
+  const code = typeof details?.code === "string" ? details.code : "";
+  const message = typeof details?.message === "string" ? details.message : "";
+
+  if (["42P01", "42703", "PGRST205"].includes(code)) {
+    return `Portal settings database schema is missing (${code}). Apply supabase/migrations/20261127050000_repair_portal_settings.sql in the Supabase SQL Editor.`;
+  }
+  if (action === "load" && code === "PGRST116") {
+    return "The portal settings row is missing. Apply supabase/migrations/20261127050000_repair_portal_settings.sql in the Supabase SQL Editor.";
+  }
+  return message || (action === "load" ? "Unable to load portal settings." : "Could not save portal settings.");
+}
+
 export default function SettingsPage() {
   const [duration, setDuration] = useState("10");
   const [savedDuration, setSavedDuration] = useState(10);
@@ -31,7 +47,7 @@ export default function SettingsPage() {
         setSavedDuration(data.project_duration_days);
         setUpdatedAt(data.updated_at);
       } catch (reason) {
-        if (active) setError(reason instanceof Error ? reason.message : "Unable to load portal settings. Apply the latest Supabase migrations.");
+        if (active) setError(getSettingsError(reason, "load"));
       } finally {
         if (active) setLoading(false);
       }
@@ -71,7 +87,7 @@ export default function SettingsPage() {
       setUpdatedAt(data.updated_at);
       setMessage("Project duration saved. New allocations will use this schedule.");
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not save portal settings.");
+      setError(getSettingsError(reason, "save"));
     } finally {
       setSaving(false);
     }
@@ -107,7 +123,7 @@ export default function SettingsPage() {
           </div>
           {updatedAt && <p className="mt-4 text-[9px] text-slate-400">Last saved {new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(updatedAt))}</p>}
 
-          <button type="submit" disabled={saving || loading || !isDirty || !isSupabaseConfigured} className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-xs font-bold text-white shadow-lg shadow-blue-600/15 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0">
+          <button type="submit" aria-busy={saving} disabled={saving || loading || !isDirty || !isSupabaseConfigured} className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-xs font-bold text-white shadow-lg shadow-blue-600/15 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0">
             <Save size={14}/>{saving ? "Saving settings…" : "Save project settings"}
           </button>
         </form>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
+import { startPageTransition } from "@/components/page-transition-loader";
 
 export default function VerifyOtpPage() {
   const [token,setToken]=useState("");
@@ -48,6 +49,7 @@ export default function VerifyOtpPage() {
           : "This sign-in page is for students. Use the faculty sign-in page for faculty accounts.");
       }
       const destination=profile.role==="SUPER_ADMIN"?"/admin/dashboard":profile.role==="FACULTY"?"/faculty/dashboard":"/student/dashboard";
+      startPageTransition(destination);
       router.replace(destination);
       router.refresh();
     } catch(reason) {
@@ -93,9 +95,9 @@ export default function VerifyOtpPage() {
         <div className="mx-auto w-fit"><Logo /></div>
         <h1 className="mt-8 text-2xl font-bold">Verify your email</h1>
         <p className="mt-2 text-sm text-slate-500">Enter the six-digit code sent to your email.</p>
-        <form onSubmit={submit} className="mt-7"><input inputMode="numeric" pattern="[0-9]{6}" maxLength={6} minLength={6} required value={token} onChange={e=>setToken(e.target.value)} placeholder="000000" className="h-14 w-full rounded-lg border border-slate-200 text-center text-2xl font-bold tracking-[0.5em]" />{error&&<p role="alert" className="mt-3 text-left text-xs text-red-600">{error}</p>}<button disabled={busy} className="mt-4 h-12 w-full rounded-lg bg-blue-600 text-sm font-bold text-white disabled:opacity-50">{busy?"Verifying…":"Verify account"}</button></form>
+        <form onSubmit={submit} className="mt-7"><input inputMode="numeric" pattern="[0-9]{6}" maxLength={6} minLength={6} required value={token} onChange={e=>setToken(e.target.value)} placeholder="000000" className="h-14 w-full rounded-lg border border-slate-200 text-center text-2xl font-bold tracking-[0.5em]" />{error&&<p role="alert" className="mt-3 text-left text-xs text-red-600">{error}</p>}<button aria-busy={busy} disabled={busy} className="mt-4 h-12 w-full rounded-lg bg-blue-600 text-sm font-bold text-white disabled:opacity-50">{busy?"Verifying…":"Verify account"}</button></form>
         {notice&&<p role="status" className="mt-4 rounded-lg bg-green-50 p-3 text-left text-xs text-green-700">{notice}</p>}
-        <button type="button" onClick={resendCode} disabled={busy||resending} className="mt-5 text-xs font-bold text-blue-600 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" aria-busy={resending} onClick={resendCode} disabled={busy||resending} className="mt-5 text-xs font-bold text-blue-600 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
           {resending?"Sending a new code…":"Resend code"}
         </button>
         <Link href="/login" className="mt-5 inline-block text-xs font-bold text-blue-600">Back to login</Link>

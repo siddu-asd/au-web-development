@@ -200,6 +200,7 @@ export function SubjectProjectFolders({
               </label>
               <button
                 type="button"
+                aria-busy={publishing}
                 onClick={() => void publishSelected()}
                 disabled={!isSupabaseConfigured || selectedDraftIds.length === 0 || publishing}
                 className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"

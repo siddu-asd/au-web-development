@@ -102,6 +102,7 @@ export function ProjectCsvImport({ role }: { role: PortalRole }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
   const router = useRouter();
   const projectsPath = role === "admin" ? "/admin/projects" : "/faculty/projects";
 
@@ -121,6 +122,7 @@ export function ProjectCsvImport({ role }: { role: PortalRole }) {
       return;
     }
 
+    setReading(true);
     try {
       const rows = parseCsv((await file.text()).replace(/^\uFEFF/, ""));
       const headers = rows.shift()?.map((header) => header.trim().toLowerCase()) ?? [];
@@ -193,6 +195,8 @@ export function ProjectCsvImport({ role }: { role: PortalRole }) {
       if (!validProjects.length && !rowIssues.length) setError("The CSV contains no project rows.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not read the CSV file.");
+    } finally {
+      setReading(false);
     }
   }
 
@@ -297,11 +301,11 @@ export function ProjectCsvImport({ role }: { role: PortalRole }) {
               <p className="mt-1 text-xs leading-5 text-slate-500">We validate each row before anything is saved.</p>
             </div>
           </div>
-          <label className="mt-5 flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-center transition hover:border-blue-400 hover:bg-blue-50/50">
-            <Upload size={20} className="text-slate-400"/>
+          <label aria-busy={reading} className="mt-5 flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-center transition hover:border-blue-400 hover:bg-blue-50/50">
+            {reading ? <span className="text-xs font-bold text-blue-700">Reading and validating CSV…</span> : <Upload size={20} className="text-slate-400"/>}
             <span className="mt-2 text-xs font-bold text-slate-700">{fileName || "Choose a CSV file"}</span>
             <span className="mt-1 text-[11px] text-slate-500">.csv format, up to 1 MB</span>
-            <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(event) => {const file=event.target.files?.[0];event.target.value="";void loadFile(file);}}/>
+            <input type="file" accept=".csv,text/csv" disabled={reading||busy} className="sr-only" onChange={(event) => {const file=event.target.files?.[0];event.target.value="";void loadFile(file);}}/>
           </label>
 
           {issues.length > 0 && (
@@ -332,7 +336,7 @@ export function ProjectCsvImport({ role }: { role: PortalRole }) {
           {notice && <p role="status" className="mt-4 rounded-lg bg-green-50 p-3 text-xs text-green-700">{notice}</p>}
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[11px] text-slate-500">Saving uses your account role and database permissions.</p>
-            <button type="button" onClick={() => void importProjects()} disabled={busy || projects.length === 0 || issues.length > 0 || !isSupabaseConfigured} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" aria-busy={busy} onClick={() => void importProjects()} disabled={busy || projects.length === 0 || issues.length > 0 || !isSupabaseConfigured} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
               {busy ? "Importing projects…" : `Import ${projects.length || ""} project${projects.length === 1 ? "" : "s"}`}
             </button>
           </div>

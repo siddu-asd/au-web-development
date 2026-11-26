@@ -7,6 +7,7 @@ import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
 import { useRouter } from "next/navigation";
+import { startPageTransition } from "@/components/page-transition-loader";
 
 const inputClassName =
   "h-12 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100";
@@ -37,11 +38,14 @@ export default function RegisterPage() {
       });
       if(authError)throw authError;
       if(data.session) {
+        startPageTransition("/student/dashboard");
         router.replace("/student/dashboard");
         router.refresh();
         return;
       }
-      router.replace(`/login?email=${encodeURIComponent(email)}&signup=created`);
+      const destination = `/login?email=${encodeURIComponent(email)}&signup=created`;
+      startPageTransition(destination);
+      router.replace(destination);
     } catch(reason) {
       setError(reason instanceof Error?reason.message:"Registration failed. Please try again.");
     } finally {setBusy(false);}
@@ -49,13 +53,12 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(500px,0.9fr)]">
-      <section className="dashboard-enter relative hidden min-h-screen overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col xl:p-16">
-        <div className="ambient-glow absolute -right-36 top-24 h-96 w-96 rounded-full bg-blue-600/25 blur-3xl" />
-        <div className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full bg-indigo-500/15 blur-3xl" />
+      <section className="auth-visual-panel dashboard-enter relative hidden min-h-screen overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col xl:p-16">
+        <div aria-hidden="true" className="auth-visual-orbit"/>
         <div className="relative"><Logo tone="inverse"/></div>
         <div className="relative my-auto max-w-xl py-16">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1.5 text-xs font-semibold text-blue-300">
-            <GraduationCap size={15} /> ProjectHub student workspace
+          <div className="auth-panel-kicker mb-6 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1.5 text-xs font-semibold text-blue-300">
+            <span/><GraduationCap size={15} /> ProjectHub student workspace
           </div>
           <h1 className="text-5xl font-bold leading-[1.12] tracking-tight xl:text-6xl">
             Your next big idea<br />starts <span className="text-blue-400">right here.</span>
@@ -68,7 +71,7 @@ export default function RegisterPage() {
             <span>One account for your complete project journey</span>
           </div>
         </div>
-        <p className="relative text-xs text-slate-500">© 2026 Arunodaya University</p>
+        <div className="relative flex items-center justify-between gap-4"><p className="text-xs text-slate-500">© 2026 Arunodaya University</p><span className="auth-side-note"><span className="auth-live-dot"/> YOUR FIRST BUILD STARTS HERE</span></div>
       </section>
 
       <section className="dashboard-enter flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 [animation-delay:80ms]">
@@ -111,7 +114,7 @@ export default function RegisterPage() {
 
               <p className="text-xs leading-5 text-slate-500">Your password is securely managed by Supabase. After creating your account, you can sign in with your password or choose email OTP—either method is enough.</p>
               {error&&<p role="alert" className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs leading-5 text-red-700">{error}</p>}
-              <button disabled={busy||!isSupabaseConfigured} className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+              <button aria-busy={busy} disabled={busy||!isSupabaseConfigured} className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
                 {busy?"Creating account…":"Create student account"} <ArrowRight size={16}/>
               </button>
             </form>

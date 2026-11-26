@@ -7,6 +7,8 @@ import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
 import { useRouter } from "next/navigation";
+import { startPageTransition } from "@/components/page-transition-loader";
+import { AuthThreeScene } from "@/components/auth-three-scene";
 
 export default function FacultyLoginPage() {
   const [method,setMethod]=useState<"password"|"otp">("password");
@@ -34,7 +36,9 @@ export default function FacultyLoginPage() {
           options:{shouldCreateUser:false},
         });
         if(authError)throw authError;
-        router.push(`/verify-otp?email=${encodeURIComponent(email)}&type=email&audience=faculty`);
+        const destination = `/verify-otp?email=${encodeURIComponent(email)}&type=email&audience=faculty`;
+        startPageTransition(destination);
+        router.push(destination);
         return;
       }
 
@@ -56,6 +60,7 @@ export default function FacultyLoginPage() {
         await supabase.auth.signOut();
         throw new Error("Your faculty account is not active. Contact your administrator.");
       }
+      startPageTransition("/faculty/dashboard");
       router.replace("/faculty/dashboard");
       router.refresh();
     } catch(reason) {
@@ -65,19 +70,20 @@ export default function FacultyLoginPage() {
 
   return (
     <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[1fr_480px]">
-      <section className="dashboard-enter relative hidden overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col">
-        <div className="ambient-glow absolute -right-32 top-20 h-96 w-96 rounded-full bg-indigo-600/25 blur-3xl" />
-        <div><Logo tone="inverse"/></div>
-        <div className="relative my-auto max-w-xl">
-          <div className="mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-indigo-300">
-            <UsersRound size={15}/> Faculty workspace
+      <section className="auth-visual-panel auth-visual-faculty dashboard-enter relative hidden overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col">
+        <AuthThreeScene variant="faculty" />
+        <div aria-hidden="true" className="auth-visual-orbit"/>
+        <div className="relative"><Logo tone="inverse"/></div>
+        <div className="relative z-10 my-auto max-w-xl">
+          <div className="auth-panel-kicker mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-indigo-300">
+            <span/><UsersRound size={15}/> Faculty workspace
           </div>
           <h1 className="text-5xl font-bold leading-[1.1]">Guide projects.<br/><span className="text-indigo-300">Track progress.</span></h1>
           <p className="mt-6 max-w-md text-lg leading-8 text-slate-400">
             Review student submissions, monitor progress, and guide project work from your faculty dashboard.
           </p>
         </div>
-        <div className="text-xs text-slate-500">© 2026 Arunodaya University</div>
+        <div className="relative z-10 flex items-center justify-between gap-4"><p className="text-xs text-slate-500">© 2026 Arunodaya University</p><span className="auth-side-note"><span className="auth-live-dot"/> FACULTY PORTAL</span></div>
       </section>
 
       <section className="dashboard-enter flex items-center justify-center px-6 py-12 [animation-delay:80ms]">
@@ -106,7 +112,7 @@ export default function FacultyLoginPage() {
               <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-xs leading-5 text-indigo-700">A six-digit sign-in code will be sent to your registered faculty email.</div>
             )}
             {error&&<p role="alert" className="rounded-lg bg-red-50 p-3 text-xs leading-5 text-red-700">{error}</p>}
-            <button disabled={busy} type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 disabled:opacity-60">
+            <button aria-busy={busy} disabled={busy} type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 disabled:opacity-60">
               {busy?"Please wait…":method==="otp"?"Send faculty sign-in code":"Sign in to faculty portal"} <ArrowRight size={16}/>
             </button>
           </form>

@@ -1,70 +1,178 @@
 import Link from "next/link";
-import { ArrowRight, Blocks, CheckCircle2, Clock3, ShieldCheck } from "lucide-react";
-import { Logo } from "@/components/logo";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUpRight,
+  Blocks,
+  Check,
+  CheckCircle2,
+  ClipboardCheck,
+  Clock3,
+  GitBranch,
+  GraduationCap,
+  Layers3,
+  LockKeyhole,
+  Orbit,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+import { HomeNavigation } from "@/components/home-navigation";
+import { LearningOrbit } from "@/components/learning-orbit";
+
+const capabilities = [
+  {
+    number: "01",
+    icon: Blocks,
+    title: "A fair start for every idea.",
+    description: "Published projects are reserved atomically, so a student gets one clear project and nobody gets an accidental double-booking.",
+    tag: "EXCLUSIVE ALLOCATION",
+    color: "blue",
+  },
+  {
+    number: "02",
+    icon: ClipboardCheck,
+    title: "Small steps. Real momentum.",
+    description: "A configurable day-by-day checklist turns a project brief into a practical path from first sketch to final deploy.",
+    tag: "GUIDED PROGRESS",
+    color: "violet",
+  },
+  {
+    number: "03",
+    icon: GraduationCap,
+    title: "Feedback that moves work forward.",
+    description: "Faculty review versioned submissions, leave useful feedback, and keep project activity in one shared workspace.",
+    tag: "FACULTY REVIEW",
+    color: "cyan",
+  },
+];
+
+const steps = [
+  ["01", "Find your subject", "Browse published subject folders and explore projects that are actually available."],
+  ["02", "Choose your challenge", "Read the requirements, pick your project, and get a personal completion timeline."],
+  ["03", "Build, track, submit", "Check off daily progress, share your live work, and receive faculty feedback."],
+];
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#fbfcff]">
-      <nav className="relative z-10 mx-auto flex h-20 max-w-7xl items-center justify-between border-b border-slate-100/80 px-6">
-        <Logo />
-        <div className="hidden items-center gap-8 text-sm font-semibold text-slate-600 md:flex">
-          <a href="#features">Features</a><a href="#workflow">How it works</a><a href="#security">Security</a>
-        </div>
-        <Link href="/login" className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5 hover:bg-blue-700">Sign in</Link>
-      </nav>
-      <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-16 md:grid-cols-[1.05fr_.95fr] md:pb-28 md:pt-24">
-        <div aria-hidden="true" className="ambient-glow pointer-events-none absolute -right-36 -top-32 h-[32rem] w-[32rem] rounded-full bg-blue-200/40 blur-[110px]"/>
-        <div className="dashboard-enter relative">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm backdrop-blur">
-            <span className="relative grid h-2 w-2 place-items-center"><span className="absolute h-full w-full animate-ping rounded-full bg-blue-500/60"/><span className="relative h-1.5 w-1.5 rounded-full bg-blue-600"/></span> Academic project management
-          </div>
-          <h1 className="max-w-2xl text-5xl font-bold leading-[1.04] tracking-[-.055em] text-slate-950 md:text-7xl">
-            From project idea to <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">approved submission.</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-base leading-8 text-slate-500 md:text-lg">
-            Allocate unique projects, follow a clear development timeline, and review every submission in one connected academic workspace.
-          </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <Link href="/login" className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-blue-600/20 transition hover:-translate-y-1 hover:shadow-blue-600/30">
-              Open ProjectHub <ArrowRight size={17} />
-            </Link>
-            <Link href="/register" className="rounded-xl border border-slate-200 bg-white/80 px-6 py-3.5 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white">Create account</Link>
-          </div>
-          <div className="mt-8 flex gap-6 text-xs font-semibold text-slate-500">
-            <span className="flex items-center gap-2"><CheckCircle2 size={15} className="text-green-600" /> Guided project timelines</span>
-            <span className="flex items-center gap-2"><ShieldCheck size={15} className="text-blue-600" /> Secure RLS</span>
-          </div>
-        </div>
-        <div className="relative dashboard-enter [animation-delay:120ms]">
-          <div className="ambient-glow absolute -inset-8 -z-10 rounded-full bg-gradient-to-br from-blue-100 via-indigo-50 to-violet-100 blur-3xl" />
-          <div className="float-slow rounded-[1.75rem] border border-white bg-white/75 p-2.5 shadow-[0_40px_100px_-32px_rgba(15,23,42,.3)] backdrop-blur">
-            <div className="overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-[#101827] to-[#172b51] p-5 sm:p-7">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <div className="flex items-center gap-3"><Blocks className="text-blue-400" size={22} /><span className="text-sm font-bold text-white">Project Overview</span></div>
-                <span className="rounded-full bg-green-500/15 px-2.5 py-1 text-[10px] font-bold text-green-400">ON TRACK</span>
-              </div>
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                {[["68%","Progress"],["6","Days left"],["3","Submitted"]].map(([value,label]) => (
-                  <div key={label} className="rounded-xl border border-white/[.09] bg-white/[.045] p-4 backdrop-blur">
-                    <div className="text-xl font-bold text-white">{value}</div><div className="mt-1 text-[10px] text-slate-400">{label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 rounded-lg border border-white/10 bg-white/[.04] p-4">
-                <div className="mb-3 flex justify-between text-xs"><span className="font-bold text-white">Development checklist</span><span className="text-slate-400">17 / 25 tasks</span></div>
-                {[72,58,88].map((w,i)=><div key={i} className="mb-2 flex h-8 items-center rounded-md bg-white/[.04] px-3"><div className="h-1.5 flex-1 rounded-full bg-white/10"><div className="h-full rounded-full bg-blue-500" style={{width:`${w}%`}} /></div></div>)}
-              </div>
+    <main className="home-page">
+      <section className="home-hero">
+        <div className="hero-grid" aria-hidden="true"/>
+        <div className="hero-ambient hero-ambient-blue" aria-hidden="true"/>
+        <div className="hero-ambient hero-ambient-violet" aria-hidden="true"/>
+        <HomeNavigation/>
+
+        <div className="home-hero-content">
+          <div className="home-hero-copy">
+            <div className="hero-eyebrow"><span className="hero-eyebrow-pulse"/>THE PROJECT WORKSPACE FOR WHAT&apos;S NEXT</div>
+            <h1 className="hero-title">
+              Turn curiosity<br/>into <span className="hero-title-gradient">something real.</span>
+            </h1>
+            <p className="hero-description">
+              One place to find a challenge, build with purpose, and bring your work all the way to review.
+            </p>
+            <div className="hero-actions">
+              <Link href="/register" className="hero-primary-button">Start building <ArrowRight size={17}/></Link>
+              <Link href="/login" className="hero-secondary-button">Explore your workspace <ArrowUpRight size={15}/></Link>
             </div>
+            <div className="hero-proof">
+              <span><CheckCircle2 size={15}/> Clear project timelines</span>
+              <i aria-hidden="true"/>
+              <span><ShieldCheck size={15}/> Role-based access</span>
+            </div>
+            <a href="#features" className="hero-scroll-cue"><span>SCROLL TO EXPLORE</span><ArrowDown size={14}/></a>
+          </div>
+
+          <div className="home-hero-visual">
+            <LearningOrbit/>
+            <div className="hero-caption"><span className="hero-caption-line"/>A better way to make progress.</div>
+          </div>
+        </div>
+        <div className="hero-bottom-line" aria-hidden="true"><span>PROJECTHUB / YOUR NEXT CHAPTER</span><span>LEARN · BUILD · SHARE</span></div>
+      </section>
+
+      <section id="features" className="capabilities-section">
+        <div className="section-container">
+          <div className="section-heading home-reveal">
+            <div>
+              <div className="section-kicker"><span>01</span> THE TOOLKIT</div>
+              <h2>Make room for<br/><span>the work that matters.</span></h2>
+            </div>
+            <p>Less searching, less guessing. A connected workspace that gives students and faculty a clear view of every project stage.</p>
+          </div>
+          <div className="capability-grid">
+            {capabilities.map(({ number, icon: Icon, title, description, tag, color }) => (
+              <article key={number} className={`capability-card capability-${color} home-reveal`}>
+                <div className="capability-card-top"><span className="capability-number">{number} / 03</span><span className="capability-icon"><Icon size={20}/></span></div>
+                <div className="capability-tag"><span/>{tag}</div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+                <div className="capability-card-foot"><span>BUILT INTO YOUR WORKFLOW</span><ArrowUpRight size={15}/></div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
-      <section id="features" className="border-t border-slate-100 bg-slate-50 py-16">
-        <div className="mx-auto grid max-w-7xl gap-4 px-6 md:grid-cols-3">
-          {[["Exclusive allocation","Database-locked project selection"],["Daily progress","A configurable development checklist"],["Faculty review","Versioned submissions and feedback"]].map(([title,text]) => (
-            <div key={title} className="product-card rounded-2xl border border-white bg-white p-6 shadow-sm"><span className="mb-5 grid h-10 w-10 place-items-center rounded-xl bg-blue-50"><Clock3 className="text-blue-600" size={20}/></span><h3 className="font-bold">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p></div>
-          ))}
+
+      <section id="workflow" className="workflow-section">
+        <div className="workflow-glow" aria-hidden="true"/>
+        <div className="section-container workflow-layout">
+          <div className="workflow-intro home-reveal">
+            <div className="section-kicker section-kicker-light"><span>02</span> FROM BRIEF TO BUILD</div>
+            <h2>Clarity at<br/>every <span>step.</span></h2>
+            <p>A good project should feel exciting, not overwhelming. ProjectHub keeps the next step visible while the big picture stays in reach.</p>
+            <Link href="/register" className="workflow-link">Find your starting point <ArrowRight size={15}/></Link>
+            <div className="workflow-orbit-mark"><Orbit size={96} strokeWidth={0.7}/><span><Sparkles size={17}/></span></div>
+          </div>
+          <div className="workflow-steps">
+            {steps.map(([number, title, description], index) => (
+              <article className="workflow-step home-reveal" key={number}>
+                <div className="workflow-step-index"><span>{number}</span>{index < steps.length - 1 && <i/>}</div>
+                <div className="workflow-step-copy"><h3>{title}</h3><p>{description}</p></div>
+                <Check size={16} className="workflow-step-check"/>
+              </article>
+            ))}
+            <div className="workflow-progress"><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/><span/></div>
+            <p className="workflow-progress-label"><Clock3 size={13}/> YOUR PACE, YOUR PROGRESS</p>
+          </div>
         </div>
       </section>
+
+      <section id="security" className="trust-section">
+        <div className="section-container trust-layout">
+          <div className="trust-visual home-reveal" aria-hidden="true">
+            <div className="trust-ring trust-ring-outer"/>
+            <div className="trust-ring trust-ring-middle"/>
+            <div className="trust-ring trust-ring-inner"/>
+            <div className="trust-lock"><LockKeyhole size={27}/></div>
+            <span className="trust-node trust-node-one"/><span className="trust-node trust-node-two"/><span className="trust-node trust-node-three"/>
+          </div>
+          <div className="trust-copy home-reveal">
+            <div className="section-kicker"><span>03</span> PRIVATE BY DESIGN</div>
+            <h2>Your work.<br/><span>Your space.</span></h2>
+            <p>Students, faculty, and administrators each get the right view for their role. Supabase Row Level Security protects personal project records at the data layer.</p>
+            <ul>
+              <li><ShieldCheck size={16}/> Role-aware portal access</li>
+              <li><Layers3 size={16}/> Student-owned progress and submissions</li>
+              <li><GitBranch size={16}/> Your code stays in your repository</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <footer className="home-footer">
+        <div className="section-container">
+          <div className="footer-cta home-reveal">
+            <div><div className="section-kicker section-kicker-light"><span>READY WHEN YOU ARE</span></div><h2>Let&apos;s make<br/><span>something matter.</span></h2></div>
+            <Link href="/register" className="footer-cta-button">Create your account <ArrowRight size={16}/></Link>
+            <div className="footer-spark" aria-hidden="true"><Sparkles size={58} strokeWidth={0.8}/></div>
+          </div>
+          <div className="footer-bottom">
+            <div className="footer-brand"><span className="footer-brand-mark"><Blocks size={17}/></span><b>ProjectHub</b><span>Academic workspace</span></div>
+            <p>Built for the brave first version.</p>
+            <Link href="/login">Sign in <ArrowUpRight size={13}/></Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

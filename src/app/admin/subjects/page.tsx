@@ -37,6 +37,7 @@ export default function Subjects() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [saving, setSaving] = useState(false);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Subject | null>(null);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -121,10 +122,11 @@ export default function Subjects() {
   }
 
   async function archiveSubject(subject: Subject) {
-    if (!isSupabaseConfigured || subject.status === "ARCHIVED") return;
+    if (!isSupabaseConfigured || subject.status === "ARCHIVED" || archivingId) return;
     if (!window.confirm(`Archive “${subject.subject_name}”? It will no longer appear as an active subject to students. Existing projects and academic history will be kept.`)) return;
     setError("");
     setMessage("");
+    setArchivingId(subject.id);
     try {
       const { data, error: archiveError } = await createClient()
         .from("subjects")
@@ -138,6 +140,8 @@ export default function Subjects() {
       setMessage(`${updated.subject_name} archived. Its projects and history are preserved.`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to archive subject.");
+    } finally {
+      setArchivingId(null);
     }
   }
 
@@ -205,7 +209,7 @@ export default function Subjects() {
                     <td className="px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold ring-1 ring-inset ${statusClass[subject.status]}`}>{subject.status}</span></td>
                     <td className="px-5 py-4"><div className="flex items-center gap-2">
                       <button type="button" disabled={!isSupabaseConfigured} onClick={() => openEditor(subject)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-[10px] font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"><Edit3 size={12}/>Edit</button>
-                      {subject.status !== "ARCHIVED" && <button type="button" disabled={!isSupabaseConfigured} onClick={() => void archiveSubject(subject)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-[10px] font-bold text-slate-500 transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 disabled:opacity-50"><Archive size={12}/>Archive</button>}
+                      {subject.status !== "ARCHIVED" && <button type="button" aria-busy={archivingId === subject.id} disabled={!isSupabaseConfigured || archivingId !== null} onClick={() => void archiveSubject(subject)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-[10px] font-bold text-slate-500 transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 disabled:opacity-50"><Archive size={12}/>{archivingId === subject.id ? "Archiving…" : "Archive"}</button>}
                     </div></td>
                   </tr>
                 ))}
@@ -233,7 +237,7 @@ export default function Subjects() {
             {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</p>}
             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button type="button" onClick={closeEditor} disabled={saving} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"><X size={13}/>Cancel</button>
-              <button type="submit" disabled={saving} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-xs font-bold text-white shadow-lg shadow-blue-600/15 disabled:opacity-50"><Check size={14}/>{saving ? "Saving changes…" : "Save subject"}</button>
+              <button type="submit" aria-busy={saving} disabled={saving} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-xs font-bold text-white shadow-lg shadow-blue-600/15 disabled:opacity-50"><Check size={14}/>{saving ? "Saving changes…" : "Save subject"}</button>
             </div>
           </form>
         </div>
