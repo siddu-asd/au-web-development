@@ -18,14 +18,12 @@ export default function RegisterPage() {
   const [password,setPassword]=useState("");
   const [confirmation,setConfirmation]=useState("");
   const [error,setError]=useState("");
-  const [notice,setNotice]=useState("");
   const [busy,setBusy]=useState(false);
   const router=useRouter();
 
   async function submit(event:React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setNotice("");
     if(password.length<8){setError("Use a password with at least 8 characters.");return;}
     if(password!==confirmation){setError("Passwords do not match.");return;}
     if(!isSupabaseConfigured){setError("Registration requires Supabase configuration. Add your project URL and anon key to .env.local.");return;}
@@ -43,7 +41,7 @@ export default function RegisterPage() {
         router.refresh();
         return;
       }
-      setNotice("Supabase did not return a sign-in session, so it is still requiring email confirmation. To skip email verification and go straight to the student portal after signup, turn off Confirm email in Supabase Authentication settings and save the change. Then create the account again. Existing unconfirmed accounts must be confirmed in Supabase Auth before they can sign in.");
+      router.replace(`/login?email=${encodeURIComponent(email)}&signup=created`);
     } catch(reason) {
       setError(reason instanceof Error?reason.message:"Registration failed. Please try again.");
     } finally {setBusy(false);}
@@ -113,7 +111,6 @@ export default function RegisterPage() {
 
               <p className="text-xs leading-5 text-slate-500">Your password is securely managed by Supabase. After creating your account, you can sign in with your password or choose email OTP—either method is enough.</p>
               {error&&<p role="alert" className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs leading-5 text-red-700">{error}</p>}
-              {notice&&<p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800">{notice}</p>}
               <button disabled={busy||!isSupabaseConfigured} className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
                 {busy?"Creating account…":"Create student account"} <ArrowRight size={16}/>
               </button>

@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Eye, EyeOff, Mail, LockKeyhole, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const signupCompleted = searchParams.get("signup") === "created";
   const [method, setMethod] = useState<"password"|"otp">("password");
   const [show, setShow] = useState(false);
   const [role, setRole] = useState("student");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -105,6 +107,7 @@ export default function LoginPage() {
               <select aria-label="Demo portal" value={role} onChange={(e)=>setRole(e.target.value)} className="ml-2 rounded border border-amber-200 bg-white px-2 py-1"><option value="student">Student</option><option value="admin">Admin</option></select>
             </div>}
             {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-700">{error}</p>}
+            {signupCompleted && <p role="status" className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs leading-5 text-blue-800">Account created. Sign in with the email and password you just registered. If Supabase says the email is not confirmed, turn off <strong>Confirm email</strong> in Supabase Authentication settings; the app cannot bypass that setting.</p>}
             <button disabled={busy} type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 disabled:opacity-60">
               {busy ? "Please wait…" : method==="otp"?"Send verification code":"Sign in"} <ArrowRight size={16}/>
             </button>
@@ -114,4 +117,8 @@ export default function LoginPage() {
       </section>
     </main>
   );
+}
+
+export default function LoginPage() {
+  return <Suspense fallback={<main className="grid min-h-screen place-items-center bg-slate-50 text-sm text-slate-500">Loading sign-in…</main>}><LoginForm/></Suspense>;
 }
