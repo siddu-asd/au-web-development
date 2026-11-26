@@ -67,9 +67,9 @@ function LoginForm() {
 
   return (
     <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[1fr_480px]">
-      <section className="relative hidden overflow-hidden bg-slate-950 p-12 lg:flex lg:flex-col">
+      <section className="dashboard-enter relative hidden overflow-hidden bg-slate-950 p-12 lg:flex lg:flex-col">
         <div className="absolute -right-32 top-20 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl" />
-        <div className="text-white"><Logo /></div>
+        <div><Logo tone="inverse"/></div>
         <div className="relative my-auto max-w-xl">
           <div className="mb-6 text-xs font-bold uppercase tracking-[0.18em] text-blue-400">ProjectHub workspace</div>
           <h1 className="text-5xl font-bold leading-[1.1] text-white">Build with purpose.<br/><span className="text-blue-400">Track every step.</span></h1>
@@ -77,7 +77,7 @@ function LoginForm() {
         </div>
         <div className="text-xs text-slate-500">© 2026 Arunodaya University</div>
       </section>
-      <section className="flex items-center justify-center px-6 py-12">
+      <section className="dashboard-enter flex items-center justify-center px-6 py-12 [animation-delay:80ms]">
         <div className="w-full max-w-[390px]">
           <div className="mb-8 lg:hidden"><Logo /></div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-950">Welcome back</h2>

@@ -236,7 +236,7 @@ export function ProjectCsvImport({ role }: { role: PortalRole }) {
         objectives: project.objectives,
         requirements: {
           functional_requirements: project.functionalRequirements,
-          development_guidelines: "Complete the work within 10 days. Track daily checklist progress.",
+          development_guidelines: "Complete the work within the project duration configured by the university. Track daily checklist progress.",
           submission_guidelines: "Submit HTTPS Vercel deployment and GitHub repository URLs.",
         },
         technologies: project.technologies,

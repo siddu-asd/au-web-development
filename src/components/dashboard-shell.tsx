@@ -87,6 +87,19 @@ export function DashboardShell({
     return ()=>window.removeEventListener("keydown",closeOnEscape);
   },[open]);
   useEffect(()=>{
+    const navigation=document.getElementById("dashboard-navigation");
+    const activeLink=navigation?.querySelector<HTMLElement>('[aria-current="page"]');
+    if(!navigation||!activeLink)return;
+    const navigationBounds=navigation.getBoundingClientRect();
+    const linkBounds=activeLink.getBoundingClientRect();
+    if(linkBounds.top<navigationBounds.top||linkBounds.bottom>navigationBounds.bottom){
+      navigation.scrollTo({
+        top:navigation.scrollTop+linkBounds.top-navigationBounds.top-(navigationBounds.height-linkBounds.height)/2,
+        behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth",
+      });
+    }
+  },[pathname]);
+  useEffect(()=>{
     if(!isSupabaseConfigured)return;
     let active=true;
     async function loadProfile(){
@@ -134,7 +147,11 @@ export function DashboardShell({
   const initials=profileName.split(/\s+/).filter(Boolean).slice(0,2).map((part)=>part[0]?.toUpperCase()).join("")||"U";
 
   return (
-    <div className="min-h-screen bg-[#f6f8fb] text-slate-900">
+    <div className="relative isolate min-h-screen overflow-hidden bg-[#f4f6fb] text-slate-900">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="ambient-glow absolute -right-36 -top-56 h-[34rem] w-[34rem] rounded-full bg-blue-200/30 blur-[110px]"/>
+        <div className="absolute -bottom-64 left-[34%] h-[30rem] w-[30rem] rounded-full bg-violet-200/20 blur-[120px]"/>
+      </div>
       {open && (
         <button
           aria-label="Close navigation"
@@ -143,21 +160,21 @@ export function DashboardShell({
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col overflow-hidden border-r border-slate-200/80 bg-white transition-transform duration-300 motion-reduce:transition-none lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col overflow-hidden border-r border-white/[0.07] bg-[#111a2e] shadow-[20px_0_70px_-45px_rgba(15,23,42,.7)] transition-transform duration-300 motion-reduce:transition-none lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-[76px] items-center justify-between px-6">
-          <Logo />
-          <button className="lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
-            <X size={20} />
+        <div className="flex h-[82px] flex-none items-center justify-between border-b border-white/[0.07] px-5">
+          <Logo tone="inverse"/>
+          <button className="grid h-9 w-9 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-white lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
+            <X size={19} />
           </button>
         </div>
-        <nav id="dashboard-navigation" className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-          <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+        <nav id="dashboard-navigation" className="nav-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5">
+          <div className="mb-3 px-3 text-[9px] font-bold uppercase tracking-[0.19em] text-slate-500">
             {role === "admin" ? "Administration" : role === "faculty" ? "Faculty portal" : "Student portal"}
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {items.map((item) => {
               const active = pathname===item.href||pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
@@ -167,38 +184,39 @@ export function DashboardShell({
                   href={item.href}
                   onClick={() => setOpen(false)}
                   aria-current={active?"page":undefined}
-                  className={`group flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-semibold transition-colors ${
+                  className={`group relative flex h-11 items-center gap-3 rounded-xl px-3 text-[12px] font-semibold transition-colors ${
                     active
-                      ? "bg-blue-50 text-blue-700 shadow-sm shadow-blue-950/[0.03]"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+                      ? "bg-blue-500/15 text-blue-200 ring-1 ring-inset ring-blue-300/10"
+                      : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
                   }`}
                 >
-                  <Icon size={17} strokeWidth={active ? 2.4 : 2} />
+                  <Icon size={17} strokeWidth={active ? 2.4 : 1.9} className={active?"text-blue-300":"text-slate-500 transition-colors group-hover:text-slate-300"}/>
                   {item.label}
+                  {active&&<span className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-300 shadow-[0_0_12px_rgba(147,197,253,.8)]"/>}
                 </Link>
               );
             })}
           </div>
         </nav>
-        <div className="flex-none border-t border-slate-100 p-3">
+        <div className="flex-none border-t border-white/[0.07] p-3">
           <Link
             href={profileHref}
-            className="flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
+            className="flex h-10 items-center gap-3 rounded-xl px-3 text-[12px] font-semibold text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white"
           >
             {role==="student"?<CircleUserRound size={17}/>:role==="faculty"?<LayoutDashboard size={17}/>:<Settings size={17}/>}
             {role==="student"?"My profile":role==="faculty"?"Faculty dashboard":"Settings"}
           </Link>
-          <button onClick={()=>void logout()} disabled={signingOut} className="mt-1 flex h-10 w-full items-center gap-3 rounded-lg px-3 text-[13px] font-semibold text-red-500 transition-colors hover:bg-red-50 disabled:cursor-wait disabled:opacity-60">
+          <button onClick={()=>void logout()} disabled={signingOut} className="mt-1 flex h-10 w-full items-center gap-3 rounded-xl px-3 text-[12px] font-semibold text-rose-300 transition-colors hover:bg-rose-400/10 disabled:cursor-wait disabled:opacity-60">
             <LogOut size={17} /> {signingOut?"Signing out…":"Logout"}
           </button>
         </div>
       </aside>
 
-      <div className="lg:pl-[260px]">
-        <header className="sticky top-0 z-30 flex h-[76px] items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur lg:px-8">
+      <div className="relative z-10 lg:pl-[272px]">
+        <header className="sticky top-0 z-30 flex h-[78px] items-center justify-between border-b border-white/80 bg-white/75 px-4 shadow-[0_8px_30px_-28px_rgba(15,23,42,.3)] backdrop-blur-2xl lg:px-8">
           <div className="flex items-center gap-3">
             <button
-              className="grid h-10 w-10 place-items-center rounded-lg border border-slate-200 lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200/80 bg-white/80 text-slate-600 shadow-sm transition-colors hover:bg-white lg:hidden"
               onClick={() => setOpen(true)}
               aria-label="Open menu"
               aria-expanded={open}
@@ -207,17 +225,17 @@ export function DashboardShell({
               <Menu size={19} />
             </button>
             <div className="min-w-0">
-              <div className="text-[11px] font-medium text-slate-400">Workspace / {title}</div>
-              <h1 className="mt-0.5 truncate text-[16px] font-bold text-slate-950">{title}</h1>
+              <div className="text-[10px] font-semibold tracking-wide text-slate-400">PROJECTHUB <span className="px-1 text-slate-300">/</span> {title}</div>
+              <h1 className="mt-0.5 truncate text-[15px] font-bold tracking-tight text-slate-950">{title}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href={notificationHref} onClick={()=>setOpen(false)} aria-label={`Notifications${unreadCount?`, ${unreadCount} unread`:""}`} className="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900">
+            <Link href={notificationHref} onClick={()=>setOpen(false)} aria-label={`Notifications${unreadCount?`, ${unreadCount} unread`:""}`} className="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200/80 bg-white/80 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-slate-900">
               <Bell size={18} />
               {unreadCount>0&&<span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-white bg-red-500 px-1 text-[9px] font-bold text-white">{unreadCount>9?"9+":unreadCount}</span>}
             </Link>
-            <Link href={profileHref} onClick={()=>setOpen(false)} aria-label={`Open ${profileName} account`} className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 pr-3 transition-colors hover:bg-slate-50">
-              <div className={`grid h-7 w-7 place-items-center rounded-lg text-xs font-bold text-white ${role==="faculty"?"bg-violet-600":"bg-blue-600"}`}>
+            <Link href={profileHref} onClick={()=>setOpen(false)} aria-label={`Open ${profileName} account`} className="flex h-10 items-center gap-2 rounded-xl border border-slate-200/80 bg-white/80 px-2 pr-3 shadow-sm transition-colors hover:bg-white">
+              <div className={`grid h-7 w-7 place-items-center rounded-lg text-xs font-bold text-white ${role==="faculty"?"bg-gradient-to-br from-violet-500 to-indigo-600":"bg-gradient-to-br from-blue-500 to-indigo-600"}`}>
                 {initials}
               </div>
               <div className="hidden text-left sm:block">
@@ -228,7 +246,7 @@ export function DashboardShell({
             </Link>
           </div>
         </header>
-        <main className="dashboard-enter p-4 sm:p-6 lg:p-8">
+        <main className="dashboard-enter mx-auto w-full max-w-[1680px] p-4 sm:p-6 lg:p-8">
           {shellError&&<p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">{shellError}</p>}
           {description && (
             <div className="mb-6">

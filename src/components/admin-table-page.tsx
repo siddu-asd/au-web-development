@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardShell } from "./dashboard-shell";
 import { Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +26,9 @@ export function AdminTablePage({
   const [search,setSearch]=useState("");
   const [loading,setLoading]=useState(Boolean(dataSource&&isSupabaseConfigured));
   const [error,setError]=useState("");
+  const [page,setPage]=useState(0);
+  const [studentIds,setStudentIds]=useState<Map<string,string>>(new Map());
+  const [accountBusyId,setAccountBusyId]=useState("");
   const extendDeadline=useCallback(async(allocationId:string,currentDeadline:string)=>{
     const deadlineText=window.prompt("New deadline (for example 2026-12-05T10:00:00+05:30):",currentDeadline);
     if(deadlineText===null)return;
@@ -79,6 +82,7 @@ export function AdminTablePage({
         if(checklistResult.error){setError(checklistResult.error.message);setLoading(false);return;}
         const checklistRows=(checklistResult.data??[]) as {allocation_id:string;is_completed:boolean}[];
         const studentRows=(profilesResult.data??[]) as {id:string;full_name:string;registration_number:string;email:string;account_status:string}[];
+        setStudentIds(new Map(studentRows.map((student)=>[student.registration_number,student.id])));
         setVisibleRows(studentRows.map(student=>{
           const allocation=allocationByStudent.get(student.id);
           const subject=allocation?.projects?.subjects;
@@ -106,9 +110,10 @@ export function AdminTablePage({
         const items=taskRows.filter(item=>item.allocation_id===row.id);
         const complete=items.filter(item=>item.is_completed).length;
         const percentage=items.length?Math.round(complete*100/items.length):0;
-        const days=Math.max(1,Math.min(10,Math.floor((Date.now()-new Date(row.allocation_date).getTime())/86400000)+1));
+        const totalDays=Math.max(1,Math.ceil((new Date(row.deadline).getTime()-new Date(row.allocation_date).getTime())/86400000));
+        const days=Math.max(1,Math.min(totalDays,Math.floor((Date.now()-new Date(row.allocation_date).getTime())/86400000)+1));
         if(dataSource==="progress")return [
-          row.profiles?.full_name??"Student",row.projects?.title??"Project",`${days} / 10`,
+          row.profiles?.full_name??"Student",row.projects?.title??"Project",`${days} / ${totalDays}`,
           `${complete} / ${items.length}`,`${percentage}%`,
           lastActivity.has(row.id)?new Date(lastActivity.get(row.id)!).toLocaleString():"No updates",
         ];
@@ -124,22 +129,58 @@ export function AdminTablePage({
     void load();
     return()=>{active=false;};
   },[dataSource,extendDeadline]);
-  const filteredRows=visibleRows.filter(row=>row.map(cell=>typeof cell==="string"?cell:"").join(" ").toLowerCase().includes(search.toLowerCase()));
+  const filteredRows=useMemo(()=>visibleRows.filter(row=>row.map(cell=>typeof cell==="string"?cell:"").join(" ").toLowerCase().includes(search.toLowerCase())),[visibleRows,search]);
+  const pageSize=10;
+  const pageCount=Math.max(1,Math.ceil(filteredRows.length/pageSize));
+  const pageRows=filteredRows.slice(page*pageSize,(page+1)*pageSize);
+  async function toggleStudentAccount(registrationNumber:string,status:string){
+    const id=studentIds.get(registrationNumber);
+    if(!id)return;
+    const nextStatus=status==="ACTIVE"?"INACTIVE":"ACTIVE";
+    const person=visibleRows.find((row)=>row[1]===registrationNumber)?.[0];
+    if(!window.confirm(`${nextStatus==="INACTIVE"?"Deactivate":"Reactivate"} ${String(person??"this account")}? ${nextStatus==="INACTIVE"?"They will be signed out and blocked from student routes.":"They will be able to sign in again."}`))return;
+    setError("");
+    setAccountBusyId(id);
+    try{
+      const {data,error:updateError}=await createClient().from("profiles")
+        .update({account_status:nextStatus})
+        .eq("id",id)
+        .eq("role","STUDENT")
+        .select("id,account_status")
+        .maybeSingle();
+      if(updateError)throw updateError;
+      if(!data)throw new Error("Account status was not changed. Check your admin permissions.");
+      setVisibleRows((current)=>current.map((row)=>row[1]===registrationNumber?row.map((cell,index)=>index===5?data.account_status:cell):row));
+    }catch(reason){
+      setError(reason instanceof Error?reason.message:"Unable to update student account status.");
+    }finally{
+      setAccountBusyId("");
+    }
+  }
+  function updateSearch(value:string){
+    setSearch(value);
+    setPage(0);
+  }
+  const extraColumns=dataSource==="allocations"?["Action"]:dataSource==="students"?["Account access"]:[];
   return (
     <DashboardShell role={role} title={title} description={description}>
       {children&&<div className="mb-5">{children}</div>}
       {!isSupabaseConfigured&&dataSource&&<p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Demo records; live data requires Supabase.</p>}
       {error&&<p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-xs text-red-700">{error}</p>}
+      {dataSource==="students"&&isSupabaseConfigured&&<p className="mb-4 rounded-xl border border-blue-100 bg-blue-50/80 p-3 text-[11px] leading-5 text-blue-800">Deactivate an account to revoke portal access without deleting its project or submission history.</p>}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1"><Search className="absolute left-3 top-3 text-slate-400" size={16}/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder={`Search ${title.toLowerCase()}`} className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-xs"/></div>
+        <div className="relative flex-1"><Search className="absolute left-3 top-3 text-slate-400" size={16}/><input value={search} onChange={event=>updateSearch(event.target.value)} placeholder={`Search ${title.toLowerCase()}`} className="h-10 w-full rounded-xl border border-slate-200 bg-white/90 pl-9 pr-3 text-xs shadow-sm"/></div>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-white bg-white/90 shadow-sm backdrop-blur">
+      <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-xs">
-          <thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400"><tr>{[...columns,...(dataSource==="allocations"?["Action"]:[])].map(c=><th key={c} className="px-5 py-3">{c}</th>)}</tr></thead>
-          <tbody className="divide-y divide-slate-100">{filteredRows.map((row,i)=><tr key={i}>{row.map((cell,j)=><td key={j} className="px-5 py-4">{cell}</td>)}</tr>)}</tbody>
+          <thead className="bg-slate-50/80 text-[9px] uppercase tracking-[.13em] text-slate-400"><tr>{[...columns,...extraColumns].map(c=><th key={c} className="px-5 py-3.5 font-bold">{c}</th>)}</tr></thead>
+          <tbody className="divide-y divide-slate-100/80">{pageRows.map((row,i)=><tr key={String(row[1]??i)} className="transition-colors hover:bg-blue-50/25">{row.map((cell,j)=><td key={j} className="px-5 py-4">{cell}</td>)}{dataSource==="students"&&<td className="px-5 py-4">{isSupabaseConfigured&&typeof row[1]==="string"&&typeof row[5]==="string"?<button type="button" disabled={accountBusyId===studentIds.get(row[1])} onClick={()=>void toggleStudentAccount(row[1] as string,row[5] as string)} className={`inline-flex h-8 items-center rounded-lg border px-2.5 text-[10px] font-bold transition disabled:opacity-50 ${row[5]==="ACTIVE"?"border-rose-200 text-rose-700 hover:bg-rose-50":"border-emerald-200 text-emerald-700 hover:bg-emerald-50"}`}>{accountBusyId===studentIds.get(row[1])?"Saving…":row[5]==="ACTIVE"?"Deactivate":"Reactivate"}</button>:<span className="text-[10px] text-slate-400">—</span>}</td>}</tr>)}</tbody>
         </table>
-        {loading&&<p className="p-6 text-center text-xs text-slate-500">Loading records…</p>}
-        {!loading&&filteredRows.length===0&&!error&&<p className="p-6 text-center text-xs text-slate-500">No records found.</p>}
+      </div>
+        {loading&&<div className="space-y-3 p-5"><div className="h-10 animate-pulse rounded-lg bg-slate-100"/><div className="h-10 animate-pulse rounded-lg bg-slate-100"/><div className="h-10 animate-pulse rounded-lg bg-slate-100"/></div>}
+        {!loading&&filteredRows.length===0&&!error&&<p className="p-10 text-center text-xs text-slate-500">No records found.</p>}
+        {!loading&&filteredRows.length>pageSize&&<div className="flex items-center justify-between border-t border-slate-100 px-5 py-3"><span className="text-[10px] text-slate-400">Showing {page*pageSize+1}–{Math.min((page+1)*pageSize,filteredRows.length)} of {filteredRows.length}</span><div className="flex gap-2"><button type="button" onClick={()=>setPage((current)=>Math.max(0,current-1))} disabled={page===0} className="h-8 rounded-lg border border-slate-200 px-3 text-[10px] font-bold text-slate-600 disabled:opacity-40">Previous</button><button type="button" onClick={()=>setPage((current)=>Math.min(pageCount-1,current+1))} disabled={page>=pageCount-1} className="h-8 rounded-lg border border-slate-200 px-3 text-[10px] font-bold text-slate-600 disabled:opacity-40">Next</button></div></div>}
       </div>
     </DashboardShell>
   );

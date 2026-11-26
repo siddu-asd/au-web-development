@@ -2,13 +2,14 @@
 
 :root {
   color-scheme: light;
-  --background: #f5f7fb;
-  --foreground: #111827;
+  --background: #f4f6fb;
+  --foreground: #101828;
   --brand-50: #eff6ff;
   --brand-100: #dbeafe;
-  --brand-600: #2563eb;
-  --brand-700: #1d4ed8;
-  --surface-border: #e7ebf2;
+  --brand-600: #356df3;
+  --brand-700: #2456d7;
+  --surface-border: #e7eaf1;
+  --surface-shadow: 0 18px 48px -30px rgb(15 23 42 / 28%);
 }
 
 @theme inline {
@@ -46,18 +47,86 @@ button, a, input, textarea, select { outline-offset: 3px; }
   outline: 2px solid var(--brand-600);
 }
 
+.nav-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+
+.nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  a, button, input, select, textarea {
-    transition-duration: 160ms;
+  a, button, input, select, textarea, article {
     transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .dashboard-enter {
-    animation: dashboard-enter 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation: enter-up 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  @keyframes dashboard-enter {
-    from { opacity: 0; transform: translateY(8px); }
+  .animate-in {
+    animation: enter-up 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .stat-number {
+    animation: stat-pop 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .dashboard-enter > * {
+    animation: enter-up 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .dashboard-enter > :nth-child(2) { animation-delay: 50ms; }
+  .dashboard-enter > :nth-child(3) { animation-delay: 100ms; }
+  .dashboard-enter > :nth-child(4) { animation-delay: 150ms; }
+  .dashboard-enter > :nth-child(5) { animation-delay: 200ms; }
+
+  .product-card {
+    box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+    transition: transform 220ms, box-shadow 220ms, border-color 220ms, background-color 220ms;
+  }
+
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--surface-shadow);
+  }
+
+  .float-slow {
+    animation: float-slow 7s ease-in-out infinite;
+  }
+
+  .ambient-glow {
+    animation: ambient-glow 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes enter-up {
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-9px); }
+  }
+
+  @keyframes ambient-glow {
+    from { opacity: 0.45; transform: scale(0.96); }
+    to { opacity: 0.85; transform: scale(1.05); }
+  }
+
+  @keyframes stat-pop {
+    from { opacity: 0; transform: translateY(5px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

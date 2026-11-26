@@ -155,8 +155,8 @@ export function SubjectProjectFolders({
   }
 
   const sectionClass = compact
-    ? "rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
-    : "rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6";
+    ? "rounded-2xl border border-white bg-white/90 p-5 shadow-[0_14px_45px_-35px_rgba(15,23,42,.35)] backdrop-blur"
+    : "rounded-2xl border border-white bg-white/90 p-5 shadow-[0_14px_45px_-35px_rgba(15,23,42,.35)] backdrop-blur sm:p-6";
 
   return (
     <section className={sectionClass}>
@@ -217,7 +217,7 @@ export function SubjectProjectFolders({
           ) : (
             <div className={`grid gap-3 ${compact ? "md:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3"}`}>
               {visibleProjects.map((project) => (
-                <article key={project.id} className={`rounded-lg border p-4 transition ${selectedDraftIds.includes(project.id) ? "border-blue-300 bg-blue-50/30" : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/30"}`}>
+                <article key={project.id} className={`product-card rounded-2xl border p-4 ${selectedDraftIds.includes(project.id) ? "border-blue-300 bg-blue-50/40" : "border-slate-200/80 bg-white hover:border-blue-200"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-[10px] font-bold text-slate-400">{project.project_code}</span>
                     <div className="flex items-center gap-2">
@@ -245,7 +245,7 @@ export function SubjectProjectFolders({
           {subjects.map((subject) => {
             const count = projectsBySubject.get(subject.id)?.length ?? 0;
             return (
-              <button type="button" key={subject.id} onClick={() => setSelectedSubjectId(subject.id)} className="group rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-left transition hover:border-blue-300 hover:bg-blue-50/40">
+              <button type="button" key={subject.id} onClick={() => setSelectedSubjectId(subject.id)} className="product-card group rounded-2xl border border-white bg-white/80 p-4 text-left shadow-sm hover:border-blue-200">
                 <div className="flex items-start justify-between gap-2"><span className="grid h-10 w-10 place-items-center rounded-lg bg-blue-100 text-blue-700 transition group-hover:bg-blue-200"><Folder size={21}/></span><span className="rounded-full bg-white px-2 py-1 text-[9px] font-bold text-slate-600">{count} project{count === 1 ? "" : "s"}</span></div>
                 <h3 className="mt-4 text-xs font-bold text-slate-900">{subject.subject_name}</h3>
                 <p className="mt-1 text-[10px] font-semibold text-blue-600">{subject.subject_code}</p>

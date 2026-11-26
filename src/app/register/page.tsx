@@ -49,10 +49,10 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(500px,0.9fr)]">
-      <section className="relative hidden min-h-screen overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col xl:p-16">
-        <div className="absolute -right-36 top-24 h-96 w-96 rounded-full bg-blue-600/25 blur-3xl" />
+      <section className="dashboard-enter relative hidden min-h-screen overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col xl:p-16">
+        <div className="ambient-glow absolute -right-36 top-24 h-96 w-96 rounded-full bg-blue-600/25 blur-3xl" />
         <div className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full bg-indigo-500/15 blur-3xl" />
-        <div className="relative"><Logo /></div>
+        <div className="relative"><Logo tone="inverse"/></div>
         <div className="relative my-auto max-w-xl py-16">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1.5 text-xs font-semibold text-blue-300">
             <GraduationCap size={15} /> ProjectHub student workspace
@@ -71,10 +71,10 @@ export default function RegisterPage() {
         <p className="relative text-xs text-slate-500">© 2026 Arunodaya University</p>
       </section>
 
-      <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
+      <section className="dashboard-enter flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 [animation-delay:80ms]">
         <div className="w-full max-w-[480px]">
           <div className="mb-7 lg:hidden"><Logo /></div>
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-9">
+          <div className="product-card rounded-3xl border border-white bg-white/90 p-6 shadow-[0_30px_90px_-50px_rgba(15,23,42,.35)] backdrop-blur sm:p-9">
             <div className="mb-7">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Get started</p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Create your account</h2>

@@ -65,9 +65,9 @@ export default function FacultyLoginPage() {
 
   return (
     <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[1fr_480px]">
-      <section className="relative hidden overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col">
-        <div className="absolute -right-32 top-20 h-96 w-96 rounded-full bg-indigo-600/25 blur-3xl" />
-        <div><Logo /></div>
+      <section className="dashboard-enter relative hidden overflow-hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col">
+        <div className="ambient-glow absolute -right-32 top-20 h-96 w-96 rounded-full bg-indigo-600/25 blur-3xl" />
+        <div><Logo tone="inverse"/></div>
         <div className="relative my-auto max-w-xl">
           <div className="mb-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-indigo-300">
             <UsersRound size={15}/> Faculty workspace
@@ -80,7 +80,7 @@ export default function FacultyLoginPage() {
         <div className="text-xs text-slate-500">© 2026 Arunodaya University</div>
       </section>
 
-      <section className="flex items-center justify-center px-6 py-12">
+      <section className="dashboard-enter flex items-center justify-center px-6 py-12 [animation-delay:80ms]">
         <div className="w-full max-w-[390px]">
           <div className="mb-8 lg:hidden"><Logo /></div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Faculty portal</p>

@@ -21,7 +21,7 @@ export function CreateProjectForm({role="admin"}:{role?:"admin"|"faculty"}){
    const {data,error:insertError}=await supabase.from("projects").insert({
     subject_id:subjectId,project_code:code.trim().toUpperCase(),title:title.trim(),description:description.trim(),
     problem_statement:problem.trim(),objectives:objectives.trim(),
-    requirements:{functional_requirements:requirements.split("\n").map(v=>v.trim()).filter(Boolean),development_guidelines:"Complete the work within 10 days. Track daily checklist progress.",submission_guidelines:"Submit HTTPS Vercel deployment and GitHub repository URLs."},
+    requirements:{functional_requirements:requirements.split("\n").map(v=>v.trim()).filter(Boolean),development_guidelines:"Complete the work within the project duration configured by the university. Track daily checklist progress.",submission_guidelines:"Submit HTTPS Vercel deployment and GitHub repository URLs."},
     technologies:technologies.split(",").map(v=>v.trim()).filter(Boolean),difficulty,status,created_by:user.id,
    }).select("id").single();
    if(insertError)throw insertError;

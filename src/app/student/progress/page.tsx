@@ -49,7 +49,7 @@ export default function Progress(){
   }catch(reason){setError(reason instanceof Error?reason.message:"Could not update checklist item.");}
   finally{setBusy(null);}
  }
- return <DashboardShell role="student" title="Daily Progress" description="Update your mandatory 10-day development checklist.">
+ return <DashboardShell role="student" title="Daily Progress" description="Update your daily project development checklist.">
   {!isSupabaseConfigured&&<p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Demo checklist. Changes are disabled and are not saved.</p>}
   {isSupabaseConfigured&&!loading&&!allocationId?<div className="rounded-xl border border-slate-200 bg-white p-8 text-center"><h2 className="font-bold">No active project</h2><p className="mt-2 text-sm text-slate-500">Allocate a project before tracking daily progress.</p></div>:<>
    <div className="mb-5 grid gap-4 sm:grid-cols-3">{[["Overall",`${isSupabaseConfigured?progress:68}%`],["Completed",`${isSupabaseConfigured?completed:17} / ${isSupabaseConfigured?items.length:25}`],["Remaining",`${isSupabaseConfigured?items.length-completed:8} tasks`]].map(([l,v])=><div key={l} className="rounded-xl border border-slate-200 bg-white p-4"><span className="text-[10px] text-slate-400">{l}</span><b className="mt-1 block text-xl">{v}</b></div>)}</div>

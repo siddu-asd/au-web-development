@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { ArrowLeft, ArrowRight, Folder, FolderOpen, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Folder, FolderOpen, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/demo";
 
@@ -41,6 +41,7 @@ export default function StudentProjects() {
   const [difficulty, setDifficulty] = useState("All difficulties");
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [error, setError] = useState("");
+  const [allocationReleased, setAllocationReleased] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -68,6 +69,7 @@ export default function StudentProjects() {
           projectCount: availableProjects.filter((project) => project.subject_id === subject.id).length,
         })));
         setSubjectFilter(new URLSearchParams(window.location.search).get("subject") ?? "");
+        setAllocationReleased(new URLSearchParams(window.location.search).get("allocation") === "cancelled");
       } catch (reason) {
         if (active) setError(reason instanceof Error ? reason.message : "Unable to load subjects and projects.");
       } finally {
@@ -88,6 +90,7 @@ export default function StudentProjects() {
 
   function openSubject(id: string) {
     setSubjectFilter(id);
+    setAllocationReleased(false);
     window.history.replaceState(null, "", `/student/projects?subject=${encodeURIComponent(id)}`);
   }
 
@@ -95,12 +98,14 @@ export default function StudentProjects() {
     setSubjectFilter("");
     setSearch("");
     setDifficulty("All difficulties");
+    setAllocationReleased(false);
     window.history.replaceState(null, "", "/student/projects");
   }
 
   return (
     <DashboardShell role="student" title="Projects by Subject" description="Open a subject folder to browse its available projects.">
       {!isSupabaseConfigured && <p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">Sample projects for preview only; these are not database records.</p>}
+      {allocationReleased && <p role="status" className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800"><span className="grid h-6 w-6 place-items-center rounded-full bg-emerald-100"><CheckCircle2 size={15}/></span>Your previous project was released and is available for another student. Choose a new project below.</p>}
 
       {subjectFilter && (
         <div className="mb-5">
@@ -116,7 +121,7 @@ export default function StudentProjects() {
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Loading subject folders…</div>
       ) : isSupabaseConfigured && !subjectFilter ? (
         subjects.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white/80 p-10 text-center">
             <Folder className="mx-auto text-blue-600" size={30}/>
             <h2 className="mt-4 text-sm font-bold">No published subject folders</h2>
             <p className="mt-2 text-xs text-slate-500">Published subjects will appear here when they are available.</p>
@@ -128,7 +133,7 @@ export default function StudentProjects() {
                 type="button"
                 key={subject.id}
                 onClick={() => openSubject(subject.id)}
-                className="group rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md"
+                className="product-card group rounded-2xl border border-white bg-white p-5 text-left shadow-sm"
               >
                 <div className="flex items-start justify-between">
                   <span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-100">
@@ -177,11 +182,11 @@ export default function StudentProjects() {
               <p className="mt-2 text-xs text-slate-500">{projects.some((project) => project.subject_id === subjectFilter) ? "Try changing the search or difficulty." : "There are no available projects for this subject right now."}</p>
             </div>
           ) : (
-            <div className="p-5">
+            <div className="p-5 sm:p-6">
               <div className="mb-4 text-xs font-semibold text-slate-500">{visibleProjects.length} project{visibleProjects.length === 1 ? "" : "s"} in this subject</div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {visibleProjects.map((project) => (
-                  <article key={project.id} className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 transition hover:border-blue-200 hover:shadow-sm">
+                  <article key={project.id} className="product-card flex flex-col rounded-2xl border border-white bg-white p-5">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold text-slate-400">{project.project_code}</span>
                       <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${project.difficulty === "Easy" ? "bg-green-50 text-green-600" : project.difficulty === "Hard" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"}`}>{project.difficulty}</span>
